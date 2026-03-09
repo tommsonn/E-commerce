@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://tomshop-backend.onrender.com';
+const API_URL = 'https://e-commerce-backend-9dhw.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
