@@ -4,7 +4,6 @@ import {
   getFeaturedProducts,
   getProductBySlug,
   getProductById,
-  createProduct,
   createProductWithImages,
   updateProduct,
   deleteProduct,
@@ -26,7 +25,6 @@ router.get('/featured', getFeaturedProducts);
 router.get('/:slug', getProductBySlug);
 
 // Admin routes
-router.post('/', protect, admin, createProduct);
 router.post('/with-images', protect, admin, uploadMultiple, createProductWithImages);
 router.post('/upload', protect, admin, uploadMultiple, uploadProductImages);
 

@@ -12,7 +12,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'tomshop/products',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 500, height: 500, crop: 'limit' }]
+    transformation: [{ width: 800, height: 800, crop: 'limit' }]
   }
 });
 

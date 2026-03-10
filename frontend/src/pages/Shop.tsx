@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { productService, Product, Category } from '../services/productService';
+import { getImageUrl } from '../utils/imageUtils';
 
 interface ShopProps {
   onNavigate: (page: string, data?: any) => void;
@@ -71,7 +72,7 @@ export function Shop({ onNavigate, initialCategory }: ShopProps) {
       }
       
       const response = await productService.getProducts(params);
-      console.log('Products fetched:', response); // Debug log
+      console.log('Products fetched:', response);
       setProducts(response.products || []);
       setTotalPages(response.pages || 1);
       setTotalProducts(response.total || 0);
@@ -96,26 +97,8 @@ export function Shop({ onNavigate, initialCategory }: ShopProps) {
     return productService.calculateDiscount(price, comparePrice);
   };
 
-  // Helper function to get full image URL
-  const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
-    
-    // If it's already a full URL, return it
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    // If it's a local upload path, prepend the API URL
-    if (imagePath.startsWith('/uploads/')) {
-      return `http://localhost:5000${imagePath}`;
-    }
-    
-    // Default fallback
-    return imagePath;
-  };
-
   const handleAddToCart = async (productId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the product detail navigation
+    e.stopPropagation();
     try {
       await addToCart(productId, 1);
       alert(t('Product added to cart!', 'ምርት ወደ ጋሪ ታክሏል!'));
@@ -125,29 +108,29 @@ export function Shop({ onNavigate, initialCategory }: ShopProps) {
   };
 
   const handleProductClick = (slug: string) => {
-    console.log('Navigating to product:', slug); // Debug log
+    console.log('Navigating to product:', slug);
     onNavigate('product', { slug });
   };
 
   const handleCategoryClick = (categorySlug: string | null) => {
     setSelectedCategory(categorySlug);
-    setCurrentPage(1); // Reset to first page when changing category
+    setCurrentPage(1);
     setShowFilters(false);
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1);
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortBy(e.target.value);
-    setCurrentPage(1); // Reset to first page when sorting
+    setCurrentPage(1);
   };
 
   const handlePriceRangeChange = (value: number) => {
     setPriceRange([0, value]);
-    setCurrentPage(1); // Reset to first page when changing price
+    setCurrentPage(1);
   };
 
   if (loading && products.length === 0) {
@@ -485,7 +468,6 @@ export function Shop({ onNavigate, initialCategory }: ShopProps) {
                         
                         {[...Array(totalPages)].map((_, i) => {
                           const pageNum = i + 1;
-                          // Show first page, last page, and pages around current page
                           if (
                             pageNum === 1 ||
                             pageNum === totalPages ||

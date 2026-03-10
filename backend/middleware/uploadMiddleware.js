@@ -22,7 +22,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 export const upload = multer({
-  storage: storage, // Use Cloudinary storage instead of disk storage
+  storage: storage, // Using Cloudinary storage
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: fileFilter
 });

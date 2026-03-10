@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { productService, Product } from '../services/productService';
+import { getImageUrl } from '../utils/imageUtils';
 
 interface ProductDetailProps {
   slug: string;
@@ -29,9 +30,9 @@ export function ProductDetail({ slug, onNavigate }: ProductDetailProps) {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching product with slug:', slug); // Debug log
+      console.log('Fetching product with slug:', slug);
       const data = await productService.getProductBySlug(slug);
-      console.log('Product data received:', data); // Debug log
+      console.log('Product data received:', data);
       setProduct(data);
     } catch (error: any) {
       console.error('Error fetching product:', error);
@@ -55,24 +56,6 @@ export function ProductDetail({ slug, onNavigate }: ProductDetailProps) {
   const calculateDiscount = () => {
     if (!product || !product.compareAtPrice || product.compareAtPrice <= product.price) return 0;
     return Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100);
-  };
-
-  // Helper function to get full image URL
-  const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=600';
-    
-    // If it's already a full URL, return it
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    // If it's a local upload path, prepend the API URL
-    if (imagePath.startsWith('/uploads/')) {
-      return `http://localhost:5000${imagePath}`;
-    }
-    
-    // Default fallback
-    return imagePath;
   };
 
   if (loading) {
@@ -117,7 +100,6 @@ export function ProductDetail({ slug, onNavigate }: ProductDetailProps) {
     ? product.descriptionAm 
     : product.description || t('No description available', 'ምንም መግለጫ የለም');
 
-  // Ensure images array exists
   const images = product.images && product.images.length > 0 
     ? product.images 
     : ['https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=600'];
@@ -387,7 +369,6 @@ export function ProductDetail({ slug, onNavigate }: ProductDetailProps) {
             {t('You May Also Like', 'ሊወዷቸው የሚችሉ ምርቶች')}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {/* Sample related products - You can replace with actual related products */}
             {[1, 2, 3, 4].map((item) => (
               <div
                 key={item}

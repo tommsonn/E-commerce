@@ -3,6 +3,7 @@ import Category from '../models/Category.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { cloudinary } from '../config/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,51 +135,15 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// @desc    Create a product
-// @route   POST /api/products
-// @access  Private/Admin
-export const createProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      nameAm,
-      description,
-      descriptionAm,
-      price,
-      compareAtPrice,
-      images,
-      categoryId,
-      stockQuantity,
-      isFeatured,
-      isActive,
-    } = req.body;
-
-    const product = await Product.create({
-      name,
-      nameAm,
-      description,
-      descriptionAm,
-      price,
-      compareAtPrice: compareAtPrice || null,
-      images: images || ['https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg'],
-      categoryId,
-      stockQuantity,
-      isFeatured: isFeatured || false,
-      isActive: isActive !== undefined ? isActive : true,
-    });
-
-    res.status(201).json(product);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// @desc    Create product with image upload
+// @desc    Create product with images
 // @route   POST /api/products/with-images
 // @access  Private/Admin
 export const createProductWithImages = async (req, res) => {
   try {
+    console.log('📦 Creating product with images...');
+    console.log('Request body:', req.body);
+    console.log('Files:', req.files);
+
     const {
       name,
       nameAm,
@@ -193,10 +158,12 @@ export const createProductWithImages = async (req, res) => {
       existingImages
     } = req.body;
 
-    // Process uploaded files
+    // Process uploaded files - get Cloudinary URLs
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map(file => `/uploads/${file.filename}`);
+      // If using Cloudinary, the URL is in file.path
+      images = req.files.map(file => file.path || `/uploads/${file.filename}`);
+      console.log('📸 Uploaded images:', images);
     }
 
     // Add existing images if provided
@@ -204,6 +171,7 @@ export const createProductWithImages = async (req, res) => {
       try {
         const parsedImages = JSON.parse(existingImages);
         images = [...images, ...parsedImages];
+        console.log('➕ Added existing images:', parsedImages);
       } catch (e) {
         console.error('Error parsing existing images:', e);
       }
@@ -216,9 +184,9 @@ export const createProductWithImages = async (req, res) => {
 
     const product = await Product.create({
       name,
-      nameAm,
-      description,
-      descriptionAm,
+      nameAm: nameAm || '',
+      description: description || '',
+      descriptionAm: descriptionAm || '',
       price: Number(price),
       compareAtPrice: compareAtPrice ? Number(compareAtPrice) : null,
       images,
@@ -228,28 +196,11 @@ export const createProductWithImages = async (req, res) => {
       isActive: isActive === 'true' || isActive !== false,
     });
 
+    console.log('✅ Product created successfully:', product.name);
     res.status(201).json(product);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// @desc    Upload product images only
-// @route   POST /api/products/upload
-// @access  Private/Admin
-export const uploadProductImages = async (req, res) => {
-  try {
-    const files = req.files;
-    if (!files || files.length === 0) {
-      return res.status(400).json({ message: 'No files uploaded' });
-    }
-
-    const imageUrls = files.map(file => `/uploads/${file.filename}`);
-    res.json({ images: imageUrls });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error creating product:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -267,17 +218,44 @@ export const updateProduct = async (req, res) => {
       product.descriptionAm = req.body.descriptionAm || product.descriptionAm;
       product.price = req.body.price || product.price;
       product.compareAtPrice = req.body.compareAtPrice !== undefined ? req.body.compareAtPrice : product.compareAtPrice;
-      product.images = req.body.images || product.images;
       product.categoryId = req.body.categoryId || product.categoryId;
       product.stockQuantity = req.body.stockQuantity !== undefined ? req.body.stockQuantity : product.stockQuantity;
       product.isActive = req.body.isActive !== undefined ? req.body.isActive : product.isActive;
       product.isFeatured = req.body.isFeatured !== undefined ? req.body.isFeatured : product.isFeatured;
+
+      // Handle images update
+      if (req.body.images) {
+        try {
+          product.images = JSON.parse(req.body.images);
+        } catch (e) {
+          product.images = req.body.images;
+        }
+      }
 
       const updatedProduct = await product.save();
       res.json(updatedProduct);
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Upload product images only
+// @route   POST /api/products/upload
+// @access  Private/Admin
+export const uploadProductImages = async (req, res) => {
+  try {
+    const files = req.files;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded' });
+    }
+
+    // Get URLs from Cloudinary or local path
+    const imageUrls = files.map(file => file.path || `/uploads/${file.filename}`);
+    res.json({ images: imageUrls });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -292,17 +270,28 @@ export const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-      // Delete associated images from filesystem
+      // Delete images from Cloudinary if they're Cloudinary URLs
       if (product.images && product.images.length > 0) {
-        product.images.forEach(imagePath => {
-          if (imagePath.startsWith('/uploads/')) {
-            const filename = imagePath.replace('/uploads/', '');
+        for (const imageUrl of product.images) {
+          if (imageUrl.includes('cloudinary')) {
+            try {
+              // Extract public ID from Cloudinary URL
+              const urlParts = imageUrl.split('/');
+              const filenameWithExtension = urlParts[urlParts.length - 1];
+              const publicId = `tomshop/products/${filenameWithExtension.split('.')[0]}`;
+              await cloudinary.uploader.destroy(publicId);
+            } catch (cloudinaryError) {
+              console.error('Error deleting from Cloudinary:', cloudinaryError);
+            }
+          } else if (imageUrl.startsWith('/uploads/')) {
+            // Delete local file
+            const filename = imageUrl.replace('/uploads/', '');
             const filepath = path.join(__dirname, '../uploads', filename);
             if (fs.existsSync(filepath)) {
               fs.unlinkSync(filepath);
             }
           }
-        });
+        }
       }
 
       await product.deleteOne();
@@ -333,10 +322,22 @@ export const deleteProductImage = async (req, res) => {
       return res.status(400).json({ message: 'Invalid image index' });
     }
 
-    // Get image path and delete file if it's a local upload
-    const imagePath = product.images[index];
-    if (imagePath && imagePath.startsWith('/uploads/')) {
-      const filename = imagePath.replace('/uploads/', '');
+    // Get image path and delete file
+    const imageUrl = product.images[index];
+    
+    // Delete from Cloudinary if it's a Cloudinary URL
+    if (imageUrl.includes('cloudinary')) {
+      try {
+        const urlParts = imageUrl.split('/');
+        const filenameWithExtension = urlParts[urlParts.length - 1];
+        const publicId = `tomshop/products/${filenameWithExtension.split('.')[0]}`;
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cloudinaryError) {
+        console.error('Error deleting from Cloudinary:', cloudinaryError);
+      }
+    } else if (imageUrl.startsWith('/uploads/')) {
+      // Delete local file
+      const filename = imageUrl.replace('/uploads/', '');
       const filepath = path.join(__dirname, '../uploads', filename);
       if (fs.existsSync(filepath)) {
         fs.unlinkSync(filepath);
