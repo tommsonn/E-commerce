@@ -65,7 +65,7 @@ export const getProducts = async (req, res) => {
       total: count,
     });
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error in getProducts:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -90,7 +90,7 @@ export const getFeaturedProducts = async (req, res) => {
     
     res.json(products);
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error in getFeaturedProducts:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -111,7 +111,7 @@ export const getProductBySlug = async (req, res) => {
       res.status(404).json({ message: 'Product not found' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error in getProductBySlug:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -130,7 +130,7 @@ export const getProductById = async (req, res) => {
       res.status(404).json({ message: 'Product not found' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error in getProductById:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -142,7 +142,7 @@ export const createProductWithImages = async (req, res) => {
   try {
     console.log('📦 Creating product with images...');
     console.log('Request body:', req.body);
-    console.log('Files:', req.files);
+    console.log('Files received:', req.files?.length || 0);
 
     const {
       name,
@@ -158,10 +158,45 @@ export const createProductWithImages = async (req, res) => {
       existingImages
     } = req.body;
 
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ message: 'Product name is required' });
+    }
+    
+    if (!price) {
+      return res.status(400).json({ message: 'Price is required' });
+    }
+    
+    if (!categoryId) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
+    
+    if (stockQuantity === undefined) {
+      return res.status(400).json({ message: 'Stock quantity is required' });
+    }
+
+    // Verify category exists
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(400).json({ message: 'Invalid category' });
+    }
+
+    // Generate slug from name
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // Check if slug exists
+    const slugExists = await Product.findOne({ slug });
+    if (slugExists) {
+      // If slug exists, add a random suffix
+      slug = `${slug}-${Date.now().toString().slice(-4)}`;
+    }
+
     // Process uploaded files - get Cloudinary URLs
     let images = [];
     if (req.files && req.files.length > 0) {
-      // If using Cloudinary, the URL is in file.path
       images = req.files.map(file => file.path || `/uploads/${file.filename}`);
       console.log('📸 Uploaded images:', images);
     }
@@ -171,7 +206,7 @@ export const createProductWithImages = async (req, res) => {
       try {
         const parsedImages = JSON.parse(existingImages);
         images = [...images, ...parsedImages];
-        console.log('➕ Added existing images:', parsedImages);
+        console.log('➕ Added existing images:', parsedImages.length);
       } catch (e) {
         console.error('Error parsing existing images:', e);
       }
@@ -182,7 +217,7 @@ export const createProductWithImages = async (req, res) => {
       images = ['https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg'];
     }
 
-    const product = await Product.create({
+    const productData = {
       name,
       nameAm: nameAm || '',
       description: description || '',
@@ -194,13 +229,22 @@ export const createProductWithImages = async (req, res) => {
       stockQuantity: Number(stockQuantity),
       isFeatured: isFeatured === 'true' || isFeatured === true,
       isActive: isActive === 'true' || isActive !== false,
-    });
+      slug: slug
+    };
+
+    console.log('📝 Creating product with data:', productData);
+
+    const product = await Product.create(productData);
 
     console.log('✅ Product created successfully:', product.name);
     res.status(201).json(product);
   } catch (error) {
     console.error('❌ Error creating product:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Server error while creating product',
+      error: error.message 
+    });
   }
 };
 
@@ -211,34 +255,43 @@ export const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (product) {
-      product.name = req.body.name || product.name;
-      product.nameAm = req.body.nameAm || product.nameAm;
-      product.description = req.body.description || product.description;
-      product.descriptionAm = req.body.descriptionAm || product.descriptionAm;
-      product.price = req.body.price || product.price;
-      product.compareAtPrice = req.body.compareAtPrice !== undefined ? req.body.compareAtPrice : product.compareAtPrice;
-      product.categoryId = req.body.categoryId || product.categoryId;
-      product.stockQuantity = req.body.stockQuantity !== undefined ? req.body.stockQuantity : product.stockQuantity;
-      product.isActive = req.body.isActive !== undefined ? req.body.isActive : product.isActive;
-      product.isFeatured = req.body.isFeatured !== undefined ? req.body.isFeatured : product.isFeatured;
-
-      // Handle images update
-      if (req.body.images) {
-        try {
-          product.images = JSON.parse(req.body.images);
-        } catch (e) {
-          product.images = req.body.images;
-        }
-      }
-
-      const updatedProduct = await product.save();
-      res.json(updatedProduct);
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    // Update fields
+    product.name = req.body.name || product.name;
+    product.nameAm = req.body.nameAm || product.nameAm;
+    product.description = req.body.description || product.description;
+    product.descriptionAm = req.body.descriptionAm || product.descriptionAm;
+    product.price = req.body.price || product.price;
+    product.compareAtPrice = req.body.compareAtPrice !== undefined ? req.body.compareAtPrice : product.compareAtPrice;
+    product.categoryId = req.body.categoryId || product.categoryId;
+    product.stockQuantity = req.body.stockQuantity !== undefined ? req.body.stockQuantity : product.stockQuantity;
+    product.isActive = req.body.isActive !== undefined ? req.body.isActive : product.isActive;
+    product.isFeatured = req.body.isFeatured !== undefined ? req.body.isFeatured : product.isFeatured;
+
+    // Update slug if name changed
+    if (req.body.name && req.body.name !== product.name) {
+      product.slug = req.body.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+
+    // Handle images update
+    if (req.body.images) {
+      try {
+        product.images = JSON.parse(req.body.images);
+      } catch (e) {
+        product.images = req.body.images;
+      }
+    }
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error updating product:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -257,7 +310,7 @@ export const uploadProductImages = async (req, res) => {
     const imageUrls = files.map(file => file.path || `/uploads/${file.filename}`);
     res.json({ images: imageUrls });
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error uploading product images:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -269,38 +322,38 @@ export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (product) {
-      // Delete images from Cloudinary if they're Cloudinary URLs
-      if (product.images && product.images.length > 0) {
-        for (const imageUrl of product.images) {
-          if (imageUrl.includes('cloudinary')) {
-            try {
-              // Extract public ID from Cloudinary URL
-              const urlParts = imageUrl.split('/');
-              const filenameWithExtension = urlParts[urlParts.length - 1];
-              const publicId = `tomshop/products/${filenameWithExtension.split('.')[0]}`;
-              await cloudinary.uploader.destroy(publicId);
-            } catch (cloudinaryError) {
-              console.error('Error deleting from Cloudinary:', cloudinaryError);
-            }
-          } else if (imageUrl.startsWith('/uploads/')) {
-            // Delete local file
-            const filename = imageUrl.replace('/uploads/', '');
-            const filepath = path.join(__dirname, '../uploads', filename);
-            if (fs.existsSync(filepath)) {
-              fs.unlinkSync(filepath);
-            }
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Delete images from Cloudinary if they're Cloudinary URLs
+    if (product.images && product.images.length > 0) {
+      for (const imageUrl of product.images) {
+        if (imageUrl.includes('cloudinary')) {
+          try {
+            // Extract public ID from Cloudinary URL
+            const urlParts = imageUrl.split('/');
+            const filenameWithExtension = urlParts[urlParts.length - 1];
+            const publicId = `tomshop/products/${filenameWithExtension.split('.')[0]}`;
+            await cloudinary.uploader.destroy(publicId);
+          } catch (cloudinaryError) {
+            console.error('Error deleting from Cloudinary:', cloudinaryError);
+          }
+        } else if (imageUrl.startsWith('/uploads/')) {
+          // Delete local file
+          const filename = imageUrl.replace('/uploads/', '');
+          const filepath = path.join(__dirname, '../uploads', filename);
+          if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
           }
         }
       }
-
-      await product.deleteOne();
-      res.json({ message: 'Product removed' });
-    } else {
-      res.status(404).json({ message: 'Product not found' });
     }
+
+    await product.deleteOne();
+    res.json({ message: 'Product removed successfully' });
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error deleting product:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -350,7 +403,7 @@ export const deleteProductImage = async (req, res) => {
 
     res.json({ message: 'Image deleted successfully', images: product.images });
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error deleting product image:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -362,15 +415,16 @@ export const toggleProductActive = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     
-    if (product) {
-      product.isActive = !product.isActive;
-      await product.save();
-      res.json({ isActive: product.isActive });
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+    
+    product.isActive = !product.isActive;
+    await product.save();
+    res.json({ isActive: product.isActive });
+    
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error toggling product active status:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -382,15 +436,16 @@ export const toggleProductFeatured = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     
-    if (product) {
-      product.isFeatured = !product.isFeatured;
-      await product.save();
-      res.json({ isFeatured: product.isFeatured });
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+    
+    product.isFeatured = !product.isFeatured;
+    await product.save();
+    res.json({ isFeatured: product.isFeatured });
+    
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error toggling product featured status:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
