@@ -6,14 +6,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Helper function to generate slug
-const generateSlug = (name) => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-};
-
 // @desc    Get all categories
 // @route   GET /api/categories
 // @access  Public
@@ -36,25 +28,9 @@ export const createCategory = async (req, res) => {
 
     console.log('🔍 Creating category with data:', { name, nameAm, imageUrl, displayOrder });
 
-    if (!name) {
-      return res.status(400).json({ message: 'Category name is required' });
-    }
-
-    // Check if category already exists by name
     const categoryExists = await Category.findOne({ name });
     if (categoryExists) {
       return res.status(400).json({ message: 'Category already exists' });
-    }
-
-    // Generate slug from name
-    const slug = generateSlug(name);
-
-    // Check if slug already exists
-    const slugExists = await Category.findOne({ slug });
-    if (slugExists) {
-      // If slug exists, add a random suffix
-      const uniqueSlug = `${slug}-${Date.now().toString().slice(-4)}`;
-      slug = uniqueSlug;
     }
 
     // Ensure imageUrl is properly saved
@@ -62,8 +38,7 @@ export const createCategory = async (req, res) => {
 
     const category = await Category.create({
       name,
-      nameAm: nameAm || '',
-      slug: slug,
+      nameAm,
       imageUrl: finalImageUrl,
       displayOrder: displayOrder || 0,
     });
@@ -74,7 +49,7 @@ export const createCategory = async (req, res) => {
     res.status(201).json(category);
   } catch (error) {
     console.error('❌ Error creating category:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -120,12 +95,6 @@ export const updateCategory = async (req, res) => {
 
     category.name = req.body.name || category.name;
     category.nameAm = req.body.nameAm || category.nameAm;
-    
-    // Update slug if name changed
-    if (req.body.name && req.body.name !== category.name) {
-      category.slug = generateSlug(req.body.name);
-    }
-    
     category.imageUrl = req.body.imageUrl !== undefined ? req.body.imageUrl : category.imageUrl;
     category.displayOrder = req.body.displayOrder ?? category.displayOrder;
 
