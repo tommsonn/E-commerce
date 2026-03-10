@@ -143,6 +143,7 @@ export const createProductWithImages = async (req, res) => {
     console.log('📦 Creating product with images...');
     console.log('Request body:', req.body);
     console.log('Files received:', req.files?.length || 0);
+    console.log('User:', req.user?._id);
 
     const {
       name,
@@ -158,47 +159,58 @@ export const createProductWithImages = async (req, res) => {
       existingImages
     } = req.body;
 
-    // Validate required fields
-    if (!name) {
-      return res.status(400).json({ message: 'Product name is required' });
-    }
+    // Validate required fields with detailed errors
+    const errors = [];
+    if (!name) errors.push('name is required');
+    if (!price) errors.push('price is required');
+    if (!categoryId) errors.push('categoryId is required');
+    if (stockQuantity === undefined) errors.push('stockQuantity is required');
     
-    if (!price) {
-      return res.status(400).json({ message: 'Price is required' });
-    }
-    
-    if (!categoryId) {
-      return res.status(400).json({ message: 'Category is required' });
-    }
-    
-    if (stockQuantity === undefined) {
-      return res.status(400).json({ message: 'Stock quantity is required' });
+    if (errors.length > 0) {
+      console.log('❌ Validation errors:', errors);
+      return res.status(400).json({ 
+        message: 'Missing required fields', 
+        errors 
+      });
     }
 
     // Verify category exists
-    const category = await Category.findById(categoryId);
-    if (!category) {
-      return res.status(400).json({ message: 'Invalid category' });
+    try {
+      const category = await Category.findById(categoryId);
+      if (!category) {
+        console.log('❌ Category not found:', categoryId);
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+      console.log('✅ Category found:', category.name);
+    } catch (catError) {
+      console.error('❌ Error finding category:', catError);
+      return res.status(400).json({ message: 'Invalid category ID' });
     }
 
     // Generate slug from name
-    const slug = name
+    let slug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // Check if slug exists
-    const slugExists = await Product.findOne({ slug });
-    if (slugExists) {
-      // If slug exists, add a random suffix
+    // Check if slug exists and make unique
+    let existingProduct = await Product.findOne({ slug });
+    if (existingProduct) {
       slug = `${slug}-${Date.now().toString().slice(-4)}`;
     }
 
-    // Process uploaded files - get Cloudinary URLs
+    // Process uploaded files
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map(file => file.path || `/uploads/${file.filename}`);
-      console.log('📸 Uploaded images:', images);
+      images = req.files.map(file => {
+        // Cloudinary returns file.path, local returns filename
+        if (file.path) {
+          return file.path; // Cloudinary URL
+        } else {
+          return `/uploads/${file.filename}`; // Local path
+        }
+      });
+      console.log('📸 Processed images:', images);
     }
 
     // Add existing images if provided
@@ -236,17 +248,36 @@ export const createProductWithImages = async (req, res) => {
 
     const product = await Product.create(productData);
 
-    console.log('✅ Product created successfully:', product.name);
+    console.log('✅ Product created successfully:', product._id);
     res.status(201).json(product);
+    
   } catch (error) {
     console.error('❌ Error creating product:', error);
     console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    
+    // Check for specific MongoDB errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: error.errors 
+      });
+    }
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: 'Duplicate key error', 
+        field: Object.keys(error.keyPattern)[0] 
+      });
+    }
+    
     res.status(500).json({ 
       message: 'Server error while creating product',
       error: error.message 
     });
   }
-};
+};;
 
 // @desc    Update a product
 // @route   PUT /api/products/:id
