@@ -66,7 +66,7 @@ export function Home({ onNavigate }: HomeProps) {
     return productService.calculateDiscount(price, comparePrice);
   };
 
-  // Helper function to get full image URL
+  // ✅ FIXED: Helper function to get full image URL
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
     
@@ -75,9 +75,15 @@ export function Home({ onNavigate }: HomeProps) {
       return imagePath;
     }
     
-    // If it's a local upload path, prepend the API URL
+    // Get the API base URL from environment variables
+    const API_URL = import.meta.env.VITE_API_URL || 'https://e-commerce-backend-9dhw.onrender.com/api';
+    const BASE_URL = API_URL.replace('/api', '');
+    
+    // If it's a local upload path, prepend the BASE_URL
     if (imagePath.startsWith('/uploads/')) {
-      return `http://localhost:5000${imagePath}`;
+      const fullUrl = `${BASE_URL}${imagePath}`;
+      console.log('🖼️ Image URL:', fullUrl); // Debug log
+      return fullUrl;
     }
     
     // Default fallback
@@ -235,6 +241,7 @@ export function Home({ onNavigate }: HomeProps) {
                   alt={getCategoryName(category)}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   onError={(e) => {
+                    console.error('Category image failed:', category.imageUrl);
                     e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
                   }}
                 />
@@ -302,7 +309,7 @@ export function Home({ onNavigate }: HomeProps) {
                     alt={getProductName(product)}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     onError={(e) => {
-                      console.error('Image failed to load:', product.images[0]);
+                      console.error('Product image failed:', product.images[0]);
                       e.currentTarget.src = 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
                     }}
                   />
