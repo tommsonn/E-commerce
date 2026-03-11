@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
+import fs from 'fs';
 import connectDB from './config/db.js';
 
 // Import routes
@@ -31,6 +32,25 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ============== ENSURE UPLOADS DIRECTORY EXISTS ==============
+const uploadDir = path.join(__dirname, 'uploads');
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('✅ Created uploads directory:', uploadDir);
+  } else {
+    console.log('✅ Uploads directory exists:', uploadDir);
+    // Count files in uploads directory
+    const files = fs.readdirSync(uploadDir);
+    console.log(`📁 Uploads folder contains ${files.length} files`);
+    if (files.length > 0) {
+      console.log('📋 Sample files:', files.slice(0, 3));
+    }
+  }
+} catch (error) {
+  console.error('❌ Error with uploads directory:', error);
+}
+
 // ============== CORS CONFIGURATION ==============
 const allowedOrigins = [
   // Development
@@ -42,6 +62,7 @@ const allowedOrigins = [
   
   // Production - Your actual Render frontend URL
   process.env.FRONTEND_URL,
+  'https://e-commerce-frontend-4yol.onrender.com',
   'https://e-commerce-frontend-4yol.onrender.com', // Your actual frontend URL
 ].filter(Boolean); // Remove any undefined/null values
 
@@ -85,7 +106,7 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadDir));
 
 // ============== API ROUTES ==============
 app.use('/api/auth', authRoutes);
@@ -109,6 +130,11 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     frontendUrl: process.env.FRONTEND_URL || 'Not configured',
     allowedOrigins: allowedOrigins,
+    uploadsDirectory: {
+      path: uploadDir,
+      exists: fs.existsSync(uploadDir),
+      fileCount: fs.existsSync(uploadDir) ? fs.readdirSync(uploadDir).length : 0
+    },
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
@@ -120,7 +146,8 @@ app.get('/', (req, res) => {
       admin: '/api/admin',
       notifications: '/api/notifications',
       payment: '/api/payment',
-      health: '/health'
+      health: '/health',
+      checkUploads: '/api/check-uploads'
     }
   });
 });
@@ -143,6 +170,49 @@ app.get('/api/test', (req, res) => {
     message: 'API is working!',
     timestamp: new Date().toISOString()
   });
+});
+
+// Check uploads endpoint (for debugging)
+app.get('/api/check-uploads', (req, res) => {
+  try {
+    const uploadDir = path.join(__dirname, 'uploads');
+    const exists = fs.existsSync(uploadDir);
+    let files = [];
+    let fileStats = [];
+    
+    if (exists) {
+      files = fs.readdirSync(uploadDir);
+      fileStats = files.slice(0, 10).map(filename => {
+        const filePath = path.join(uploadDir, filename);
+        try {
+          const stats = fs.statSync(filePath);
+          return {
+            filename,
+            size: stats.size,
+            created: stats.birthtime,
+            url: `/uploads/${filename}`
+          };
+        } catch (e) {
+          return { filename, error: e.message };
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      uploadsDirectoryExists: exists,
+      uploadsPath: uploadDir,
+      fileCount: files.length,
+      sampleFiles: fileStats,
+      environment: process.env.NODE_ENV,
+      frontendUrl: process.env.FRONTEND_URL
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 // ============== ERROR HANDLING ==============
@@ -202,9 +272,15 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'Not configured'}`);
-  console.log(`📁 Uploads directory: ${path.join(__dirname, 'uploads')}`);
+  console.log(`📁 Uploads directory: ${uploadDir}`);
+  console.log(`📁 Uploads exists: ${fs.existsSync(uploadDir)}`);
+  if (fs.existsSync(uploadDir)) {
+    const files = fs.readdirSync(uploadDir);
+    console.log(`📁 Uploads contains ${files.length} files`);
+  }
   console.log(`📝 CORS enabled for: ${allowedOrigins.join(', ')}`);
-  console.log(`✅ Test endpoint: http://localhost:${PORT}/api/test`);
+  console.log(`✅ Test endpoint: /api/test`);
+  console.log(`✅ Check uploads: /api/check-uploads`);
 });
 
 // Handle unhandled promise rejections
