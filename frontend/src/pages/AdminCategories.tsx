@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUtils';
 
 interface AdminCategoriesProps {
   onNavigate: (page: string) => void;
@@ -120,13 +121,12 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       
       // If it's a new category or image was changed, upload the file
       if (selectedFile) {
-        console.log('Selected file:', selectedFile); // Debug log
+        console.log('Selected file:', selectedFile);
         
         const formDataObj = new FormData();
         formDataObj.append('image', selectedFile);
         
         try {
-          // Upload image to server
           console.log('Uploading image...');
           const uploadResponse = await productService.uploadCategoryImage(formDataObj);
           console.log('Upload response:', uploadResponse);
@@ -155,7 +155,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
         displayOrder: formData.displayOrder,
       };
 
-      console.log('Submitting category data:', categoryData); // Debug log
+      console.log('Submitting category data:', categoryData);
 
       if (editingCategory) {
         const response = await productService.updateCategory(editingCategory._id, categoryData);
@@ -415,14 +415,12 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                     )}
                   </div>
 
-                  {/* Image */}
+                  {/* Image - FIXED: Using getImageUrl helper */}
                   <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-50 to-indigo-100 
                                 dark:from-indigo-900/30 dark:to-indigo-800/30">
                     {category.imageUrl ? (
                       <img
-                        src={category.imageUrl.startsWith('/uploads/') 
-                          ? `http://localhost:5000${category.imageUrl}`
-                          : category.imageUrl}
+                        src={getImageUrl(category.imageUrl)}
                         alt={category.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         onError={(e) => {
@@ -599,7 +597,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                 />
               </div>
               
-              {/* Image Upload - Only file upload, no URL */}
+              {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('Category Image', 'የምድብ ምስል')} *
@@ -643,17 +641,19 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                   </label>
                 </div>
 
-                {/* Show current image when editing */}
+                {/* Show current image when editing - FIXED: Using getImageUrl helper */}
                 {editingCategory && editingCategory.imageUrl && !selectedFile && (
                   <div className="mt-2">
                     <p className="text-xs text-gray-500 mb-2">{t('Current image:', 'አሁን ያለው ምስል:')}</p>
                     <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                       <img
-                        src={editingCategory.imageUrl.startsWith('/uploads/') 
-                          ? `http://localhost:5000${editingCategory.imageUrl}`
-                          : editingCategory.imageUrl}
+                        src={getImageUrl(editingCategory.imageUrl)}
                         alt={editingCategory.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Failed to load current image:', editingCategory.imageUrl);
+                          e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
+                        }}
                       />
                     </div>
                   </div>
