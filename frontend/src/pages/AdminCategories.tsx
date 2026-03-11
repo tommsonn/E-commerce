@@ -56,6 +56,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       // Sort by display order
       const sorted = data.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       setCategories(sorted);
+      console.log('✅ Categories fetched:', sorted.length);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
@@ -95,6 +96,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       // Create preview URL
       const preview = URL.createObjectURL(file);
       setPreviewUrl(preview);
+      console.log('✅ File selected:', file.name);
     }
   };
 
@@ -121,24 +123,24 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       
       // If it's a new category or image was changed, upload the file
       if (selectedFile) {
-        console.log('Selected file:', selectedFile);
+        console.log('📤 Uploading file:', selectedFile.name);
         
         const formDataObj = new FormData();
         formDataObj.append('image', selectedFile);
         
         try {
-          console.log('Uploading image...');
+          console.log('📤 Sending upload request...');
           const uploadResponse = await productService.uploadCategoryImage(formDataObj);
-          console.log('Upload response:', uploadResponse);
+          console.log('📥 Upload response:', uploadResponse);
           
           if (uploadResponse && uploadResponse.imageUrl) {
             finalImageUrl = uploadResponse.imageUrl;
-            console.log('Image uploaded, path:', finalImageUrl);
+            console.log('✅ Image uploaded, path:', finalImageUrl);
           } else {
             throw new Error('No image URL returned from server');
           }
         } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
+          console.error('❌ Error uploading image:', uploadError);
           alert(t('Failed to upload image', 'ምስል መጫን አልተሳካም'));
           setUploading(false);
           return;
@@ -146,6 +148,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       } else if (editingCategory) {
         // Keep existing image when editing
         finalImageUrl = editingCategory.imageUrl || '';
+        console.log('📝 Keeping existing image:', finalImageUrl);
       }
 
       const categoryData = {
@@ -155,15 +158,15 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
         displayOrder: formData.displayOrder,
       };
 
-      console.log('Submitting category data:', categoryData);
+      console.log('📝 Submitting category data:', categoryData);
 
       if (editingCategory) {
         const response = await productService.updateCategory(editingCategory._id, categoryData);
-        console.log('Update response:', response);
+        console.log('✅ Update response:', response);
         alert(t('Category updated successfully!', 'ምድብ በተሳካ ሁኔታ ተዘምኗል!'));
       } else {
         const response = await productService.createCategory(categoryData);
-        console.log('Create response:', response);
+        console.log('✅ Create response:', response);
         alert(t('Category created successfully!', 'ምድብ በተሳካ ሁኔታ ተፈጠረ!'));
       }
       
@@ -177,7 +180,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       }
       fetchCategories();
     } catch (error) {
-      console.error('Error saving category:', error);
+      console.error('❌ Error saving category:', error);
       alert(t('Failed to save category', 'ምድብ ማስቀመጥ አልተሳካም'));
     } finally {
       setUploading(false);
@@ -209,6 +212,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       displayOrder: category.displayOrder || 0,
     });
     setShowForm(true);
+    console.log('✏️ Editing category:', category);
   };
 
   const handleMoveUp = async (index: number) => {
@@ -378,6 +382,8 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currentCategories.map((category, index) => {
               const actualIndex = categories.findIndex(c => c._id === category._id);
+              const imageUrl = getImageUrl(category.imageUrl);
+              
               return (
                 <div
                   key={category._id}
@@ -415,19 +421,34 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                     )}
                   </div>
 
-                  {/* Image - FIXED: Using getImageUrl helper */}
+                  {/* Image - FIXED: Using getImageUrl helper with error handling */}
                   <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-50 to-indigo-100 
-                                dark:from-indigo-900/30 dark:to-indigo-800/30">
+                                dark:from-indigo-900/30 dark:to-indigo-800/30 relative">
                     {category.imageUrl ? (
-                      <img
-                        src={getImageUrl(category.imageUrl)}
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        onError={(e) => {
-                          console.error('Image failed to load:', category.imageUrl);
-                          e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
-                        }}
-                      />
+                      <>
+                        <img
+                          src={imageUrl}
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          onLoad={() => console.log('✅ Category image loaded:', imageUrl)}
+                          onError={(e) => {
+                            console.error('❌ Category image failed to load:', {
+                              name: category.name,
+                              original: category.imageUrl,
+                              processed: imageUrl
+                            });
+                            // Show placeholder on error
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              const placeholder = document.createElement('div');
+                              placeholder.className = 'w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30';
+                              placeholder.innerHTML = '<div class="text-indigo-400 dark:text-indigo-300">📷</div>';
+                              parent.appendChild(placeholder);
+                            }
+                          }}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <ImageIcon className="h-12 w-12 text-gray-400 dark:text-gray-500" />
@@ -535,7 +556,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full
-                        border border-gray-100 dark:border-gray-700">
+                        border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 
                           px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -651,7 +672,10 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                         alt={editingCategory.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          console.error('Failed to load current image:', editingCategory.imageUrl);
+                          console.error('❌ Failed to load current image:', {
+                            original: editingCategory.imageUrl,
+                            processed: getImageUrl(editingCategory.imageUrl)
+                          });
                           e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
                         }}
                       />
