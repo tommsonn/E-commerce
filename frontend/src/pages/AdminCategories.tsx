@@ -18,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, isCloudinaryImage, testImageLoad } from '../utils/imageUtils';
 
 interface AdminCategoriesProps {
   onNavigate: (page: string) => void;
@@ -48,6 +48,20 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    // Debug category images
+    if (categories.length > 0) {
+      console.log('📊 Category images from API:');
+      categories.forEach(cat => {
+        console.log(`  - ${cat.name}:`, {
+          imageUrl: cat.imageUrl,
+          isCloudinary: isCloudinaryImage(cat.imageUrl),
+          fullUrl: getImageUrl(cat.imageUrl)
+        });
+      });
+    }
+  }, [categories]);
 
   const fetchCategories = async () => {
     try {
@@ -80,20 +94,17 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         alert(t('File size must be less than 5MB', 'የፋይል መጠን ከ5ሜባ በታች መሆን አለበት'));
         return;
       }
       
-      // Check file type
       if (!file.type.startsWith('image/')) {
         alert(t('Please select an image file', 'እባክዎ የምስል ፋይል ይምረጡ'));
         return;
       }
 
       setSelectedFile(file);
-      // Create preview URL
       const preview = URL.createObjectURL(file);
       setPreviewUrl(preview);
       console.log('✅ File selected:', file.name);
@@ -121,7 +132,6 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
     try {
       let finalImageUrl = '';
       
-      // If it's a new category or image was changed, upload the file
       if (selectedFile) {
         console.log('📤 Uploading file:', selectedFile.name);
         
@@ -146,7 +156,6 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
           return;
         }
       } else if (editingCategory) {
-        // Keep existing image when editing
         finalImageUrl = editingCategory.imageUrl || '';
         console.log('📝 Keeping existing image:', finalImageUrl);
       }
@@ -223,7 +232,6 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
     newCategories[index] = newCategories[index - 1];
     newCategories[index - 1] = temp;
     
-    // Update display orders
     try {
       await Promise.all([
         productService.updateCategory(newCategories[index]._id, {
@@ -269,7 +277,6 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
     (category.nameAm?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentCategories = filteredCategories.slice(indexOfFirstItem, indexOfLastItem);
@@ -421,34 +428,33 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                     )}
                   </div>
 
-                  {/* Image - FIXED: Using getImageUrl helper with error handling */}
+                  {/* Image */}
                   <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-50 to-indigo-100 
                                 dark:from-indigo-900/30 dark:to-indigo-800/30 relative">
                     {category.imageUrl ? (
-                      <>
-                        <img
-                          src={imageUrl}
-                          alt={category.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          onLoad={() => console.log('✅ Category image loaded:', imageUrl)}
-                          onError={(e) => {
-                            console.error('❌ Category image failed to load:', {
-                              name: category.name,
-                              original: category.imageUrl,
-                              processed: imageUrl
-                            });
-                            // Show placeholder on error
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              const placeholder = document.createElement('div');
-                              placeholder.className = 'w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30';
-                              placeholder.innerHTML = '<div class="text-indigo-400 dark:text-indigo-300">📷</div>';
-                              parent.appendChild(placeholder);
-                            }
-                          }}
-                        />
-                      </>
+                      <img
+                        src={imageUrl}
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        onLoad={() => console.log(`✅ Category image loaded: ${category.name}`)}
+                        onError={(e) => {
+                          console.error('❌ Category image failed to load:', {
+                            name: category.name,
+                            original: category.imageUrl,
+                            processed: imageUrl,
+                            isCloudinary: isCloudinaryImage(category.imageUrl)
+                          });
+                          // Show placeholder on error
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30';
+                            placeholder.innerHTML = '<div class="text-indigo-400 dark:text-indigo-300">📷</div>';
+                            parent.appendChild(placeholder);
+                          }
+                        }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <ImageIcon className="h-12 w-12 text-gray-400 dark:text-gray-500" />
@@ -624,7 +630,6 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                   {t('Category Image', 'የምድብ ምስል')} *
                 </label>
                 
-                {/* File Upload */}
                 <div className="mb-4">
                   <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     {previewUrl ? (
@@ -662,7 +667,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                   </label>
                 </div>
 
-                {/* Show current image when editing - FIXED: Using getImageUrl helper */}
+                {/* Show current image when editing */}
                 {editingCategory && editingCategory.imageUrl && !selectedFile && (
                   <div className="mt-2">
                     <p className="text-xs text-gray-500 mb-2">{t('Current image:', 'አሁን ያለው ምስል:')}</p>
@@ -674,7 +679,8 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                         onError={(e) => {
                           console.error('❌ Failed to load current image:', {
                             original: editingCategory.imageUrl,
-                            processed: getImageUrl(editingCategory.imageUrl)
+                            processed: getImageUrl(editingCategory.imageUrl),
+                            isCloudinary: isCloudinaryImage(editingCategory.imageUrl)
                           });
                           e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
                         }}
