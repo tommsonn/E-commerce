@@ -18,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, debugImage } from '../utils/imageUtils';
 
 interface AdminCategoriesProps {
   onNavigate: (page: string) => void;
@@ -48,6 +48,25 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    // Debug Electronics category specifically
+    const electronics = categories.find(c => c.name === 'Electronics');
+    if (electronics) {
+      console.log('🔍 Electronics category:', {
+        id: electronics._id,
+        name: electronics.name,
+        imageUrl: electronics.imageUrl,
+        displayOrder: electronics.displayOrder,
+        fullUrl: getImageUrl(electronics.imageUrl)
+      });
+      
+      // Test if image loads
+      if (electronics.imageUrl) {
+        debugImage(getImageUrl(electronics.imageUrl));
+      }
+    }
+  }, [categories]);
 
   const fetchCategories = async () => {
     try {
@@ -421,34 +440,32 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                     )}
                   </div>
 
-                  {/* Image - FIXED: Using getImageUrl helper with error handling */}
+                  {/* Image */}
                   <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-50 to-indigo-100 
                                 dark:from-indigo-900/30 dark:to-indigo-800/30 relative">
                     {category.imageUrl ? (
-                      <>
-                        <img
-                          src={imageUrl}
-                          alt={category.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          onLoad={() => console.log('✅ Category image loaded:', imageUrl)}
-                          onError={(e) => {
-                            console.error('❌ Category image failed to load:', {
-                              name: category.name,
-                              original: category.imageUrl,
-                              processed: imageUrl
-                            });
-                            // Show placeholder on error
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              const placeholder = document.createElement('div');
-                              placeholder.className = 'w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30';
-                              placeholder.innerHTML = '<div class="text-indigo-400 dark:text-indigo-300">📷</div>';
-                              parent.appendChild(placeholder);
-                            }
-                          }}
-                        />
-                      </>
+                      <img
+                        src={imageUrl}
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        onLoad={() => console.log('✅ Category image loaded:', imageUrl)}
+                        onError={(e) => {
+                          console.error('❌ Category image failed to load:', {
+                            name: category.name,
+                            original: category.imageUrl,
+                            processed: imageUrl
+                          });
+                          // Show placeholder on error
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30';
+                            placeholder.innerHTML = '<div class="text-indigo-400 dark:text-indigo-300">📷</div>';
+                            parent.appendChild(placeholder);
+                          }
+                        }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <ImageIcon className="h-12 w-12 text-gray-400 dark:text-gray-500" />
@@ -662,7 +679,7 @@ export function AdminCategories({ onNavigate }: AdminCategoriesProps) {
                   </label>
                 </div>
 
-                {/* Show current image when editing - FIXED: Using getImageUrl helper */}
+                {/* Show current image when editing */}
                 {editingCategory && editingCategory.imageUrl && !selectedFile && (
                   <div className="mt-2">
                     <p className="text-xs text-gray-500 mb-2">{t('Current image:', 'አሁን ያለው ምስል:')}</p>
