@@ -318,163 +318,160 @@ export function Home({ onNavigate }: HomeProps) {
         )}
       </section>
 
-      {/* ===== FEATURED PRODUCTS SECTION ===== */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 md:mb-16">
-          <div className="text-center sm:text-left mb-4 sm:mb-0">
-            <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-              {t('Featured Products', 'ተለይተው የቀረቡ ምርቶች')}
-            </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4 tracking-tight">
-              {t('Hand-Picked Just for You', 'ለእርስዎ ብቻ የተመረጡ')}
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl">
-              {t('Curated selection of our finest products', 'ከምርጥ ምርቶቻችን የተመረጡ')}
-            </p>
-          </div>
-          
-          <button
-            onClick={() => onNavigate('shop')}
-            className="group w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 
-                     bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm sm:text-base font-medium 
-                     hover:bg-indigo-100 dark:hover:bg-indigo-900/50 
-                     transition-all duration-300 transform hover:scale-105
-                     border border-indigo-200 dark:border-indigo-800"
-          >
-            <span>{t('View All Products', 'ሁሉንም ምርቶች ይመልከቱ')}</span>
-            <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2 group-hover:translate-x-1 sm:group-hover:translate-x-2 transition-transform" />
-          </button>
-        </div>
+{/* ===== FEATURED PRODUCTS SECTION ===== */}
+<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
+  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 md:mb-16">
+    <div className="text-center sm:text-left mb-4 sm:mb-0">
+      <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+        {t('Featured Products', 'ተለይተው የቀረቡ ምርቶች')}
+      </span>
+      <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4 tracking-tight">
+        {t('Hand-Picked Just for You', 'ለእርስዎ ብቻ የተመረጡ')}
+      </h2>
+      <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl">
+        {t('Curated selection of our finest products', 'ከምርጥ ምርቶቻችን የተመረጡ')}
+      </p>
+    </div>
+    
+    <button
+      onClick={() => onNavigate('shop')}
+      className="group w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 
+               bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm sm:text-base font-medium 
+               hover:bg-indigo-100 dark:hover:bg-indigo-900/50 
+               transition-all duration-300 transform hover:scale-105
+               border border-indigo-200 dark:border-indigo-800"
+    >
+      <span>{t('View All Products', 'ሁሉንም ምርቶች ይመልከቱ')}</span>
+      <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2 group-hover:translate-x-1 sm:group-hover:translate-x-2 transition-transform" />
+    </button>
+  </div>
 
-        {featuredProducts.length === 0 ? (
-          <div className="text-center py-10 sm:py-16 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-md px-4">
-            <div className="text-5xl sm:text-6xl mb-4">🛍️</div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {t('No featured products yet', 'ገና ተለይተው የቀረቡ ምርቶች የሉም')}
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
-              {t('Check back soon for our latest products', 'ለአዳዲስ ምርቶቻችን በቅርቡ ይመልከቱ')}
-            </p>
-            <button
-              onClick={() => onNavigate('shop')}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm sm:text-base 
-                       transition-all duration-300 transform hover:scale-105"
-            >
-              {t('Browse All Products', 'ሁሉንም ምርቶች ይመልከቱ')}
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-            {featuredProducts.map((product, index) => {
-              const discount = calculateDiscount(product.price, product.compareAtPrice);
-              
-              return (
-                <div
-                  key={product._id}
-                  className="group bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg 
-                           hover:shadow-xl transition-all duration-500 
-                           hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.02] cursor-pointer
-                           overflow-hidden border border-gray-100 dark:border-gray-700
-                           animate-fadeIn"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  onClick={() => handleProductClick(product.slug)}
-                >
-                  <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
-                    <img
-                      src={getImageUrl(product.images?.[0])}
-                      alt={getProductName(product)}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      onLoad={() => console.log(`✅ Product image loaded: ${product.name}`)}
-                      onError={(e) => {
-                        console.error('❌ Product image failed:', {
-                          product: product.name,
-                          originalImage: product.images?.[0],
-                          attemptedUrl: getImageUrl(product.images?.[0])
-                        });
-                        e.currentTarget.src = 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
-                      }}
-                    />
-                    {discount > 0 && (
-                      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-gradient-to-r from-amber-500 to-orange-500 
-                                    text-white px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-full text-2xs sm:text-xs font-bold
-                                    shadow-lg transform group-hover:scale-110 group-hover:rotate-3 
-                                    transition-all duration-300 z-10">
-                        -{discount}%
-                      </div>
-                    )}
-                    
-                    <button
-                      onClick={(e) => handleAddToCart(product._id, e)}
-                      className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-indigo-600 text-white p-1.5 sm:p-3 
-                               rounded-full opacity-0 group-hover:opacity-100 
-                               transform translate-y-1 sm:translate-y-2 group-hover:translate-y-0 
-                               transition-all duration-300 hover:bg-indigo-700
-                               shadow-md sm:shadow-lg hover:shadow-xl"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="p-3 sm:p-4 md:p-5 lg:p-6">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2 
-                                 line-clamp-2 text-sm sm:text-base md:text-lg hover:text-indigo-600 
-                                 dark:hover:text-indigo-400 transition-colors">
-                      {getProductName(product)}
-                    </h3>
-                    
-                    <div className="flex items-center mb-2 sm:mb-3 md:mb-4">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400 fill-current"
-                          />
-                        ))}
-                      </div>
-                      <span className="text-2xs sm:text-xs text-gray-500 dark:text-gray-400 ml-1 sm:ml-2">
-                        4.8
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
-                          {product.price.toLocaleString()} 
-                          <span className="text-2xs sm:text-xs font-normal text-gray-500 dark:text-gray-400 ml-0.5 sm:ml-1">
-                            {t('ETB', 'ብር')}
-                          </span>
-                        </p>
-                        {product.compareAtPrice && (
-                          <p className="text-2xs sm:text-xs text-gray-400 dark:text-gray-500 line-through">
-                            {product.compareAtPrice.toLocaleString()} {t('ETB', 'ብር')}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <button
-                        onClick={(e) => handleAddToCart(product._id, e)}
-                        className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 
-                                 dark:hover:bg-indigo-700 text-white p-1.5 sm:p-2 md:p-2.5 lg:p-3 
-                                 rounded-full transition-all transform 
-                                 hover:scale-110 hover:shadow-lg
-                                 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 
-                                 dark:focus:ring-offset-gray-800"
-                        aria-label={t('Add to cart', 'ወደ ጋሪ ጨምር')}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+  {featuredProducts.length === 0 ? (
+    <div className="text-center py-10 sm:py-16 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-md px-4">
+      <div className="text-5xl sm:text-6xl mb-4">🛍️</div>
+      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        {t('No featured products yet', 'ገና ተለይተው የቀረቡ ምርቶች የሉም')}
+      </h3>
+      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
+        {t('Check back soon for our latest products', 'ለአዳዲስ ምርቶቻችን በቅርቡ ይመልከቱ')}
+      </p>
+      <button
+        onClick={() => onNavigate('shop')}
+        className="px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm sm:text-base 
+                 transition-all duration-300 transform hover:scale-105"
+      >
+        {t('Browse All Products', 'ሁሉንም ምርቶች ይመልከቱ')}
+      </button>
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+      {featuredProducts.map((product, index) => {
+        const discount = calculateDiscount(product.price, product.compareAtPrice);
+        
+        return (
+          <div
+            key={product._id}
+            className="group bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-sm sm:shadow-md 
+                     hover:shadow-lg transition-all duration-500 
+                     hover:-translate-y-1 hover:scale-[1.02] cursor-pointer
+                     overflow-hidden border border-gray-100 dark:border-gray-700
+                     animate-fadeIn"
+            style={{ animationDelay: `${index * 100}ms` }}
+            onClick={() => handleProductClick(product.slug)}
+          >
+            <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+              <img
+                src={getImageUrl(product.images?.[0])}
+                alt={getProductName(product)}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                onLoad={() => console.log(`✅ Product image loaded: ${product.name}`)}
+                onError={(e) => {
+                  console.error('❌ Product image failed:', {
+                    product: product.name,
+                    originalImage: product.images?.[0],
+                    attemptedUrl: getImageUrl(product.images?.[0])
+                  });
+                  e.currentTarget.src = 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
+                }}
+              />
+              {discount > 0 && (
+                <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-gradient-to-r from-amber-500 to-orange-500 
+                              text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-2xs sm:text-xs font-bold
+                              shadow-md transform group-hover:scale-110 transition-all duration-300 z-10">
+                  -{discount}%
                 </div>
-              );
-            })}
+              )}
+              
+              <button
+                onClick={(e) => handleAddToCart(product._id, e)}
+                className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-indigo-600 text-white p-1 sm:p-2 
+                         rounded-full opacity-0 group-hover:opacity-100 
+                         transform translate-y-1 group-hover:translate-y-0 
+                         transition-all duration-300 hover:bg-indigo-700
+                         shadow-sm hover:shadow-md"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-2 sm:p-3">
+              <h3 className="font-medium text-gray-900 dark:text-white mb-1 
+                           line-clamp-2 text-xs sm:text-sm hover:text-indigo-600 
+                           dark:hover:text-indigo-400 transition-colors">
+                {getProductName(product)}
+              </h3>
+              
+              <div className="flex items-center mb-1">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-2 w-2 sm:h-3 sm:w-3 text-amber-400 fill-current"
+                    />
+                  ))}
+                </div>
+                <span className="text-2xs sm:text-xs text-gray-500 dark:text-gray-400 ml-1">
+                  4.8
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                    {product.price.toLocaleString()} 
+                    <span className="text-2xs sm:text-xs font-normal text-gray-500 dark:text-gray-400 ml-0.5">
+                      {t('ETB', 'ብር')}
+                    </span>
+                  </p>
+                  {product.compareAtPrice && (
+                    <p className="text-2xs sm:text-xs text-gray-400 dark:text-gray-500 line-through">
+                      {product.compareAtPrice.toLocaleString()} {t('ETB', 'ብር')}
+                    </p>
+                  )}
+                </div>
+                
+                <button
+                  onClick={(e) => handleAddToCart(product._id, e)}
+                  className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 
+                           dark:hover:bg-indigo-700 text-white p-1 sm:p-1.5 
+                           rounded-full transition-all transform 
+                           hover:scale-110 hover:shadow-sm"
+                  aria-label={t('Add to cart', 'ወደ ጋሪ ጨምር')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </section>
+        );
+      })}
+    </div>
+  )}
+</section>
 
       {/* ===== STATS SECTION ===== */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
