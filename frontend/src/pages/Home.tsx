@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { productService, Product, Category } from '../services/productService';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getCategoryImageUrl, isCloudinaryImage } from '../utils/imageUtils';
 
 interface HomeProps {
   onNavigate: (page: string, data?: any) => void;
@@ -38,18 +38,29 @@ export function Home({ onNavigate }: HomeProps) {
       console.log('✅ Categories received:', categoriesData?.length || 0);
       console.log('✅ Featured products received:', productsData?.length || 0);
       
-      // Debug: Check if products have isFeatured flag
+      // Log category images for debugging
+      if (categoriesData && categoriesData.length > 0) {
+        console.log('📦 Category images:');
+        categoriesData.forEach(cat => {
+          console.log(`  - ${cat.name}:`, {
+            imageUrl: cat.imageUrl,
+            isCloudinary: isCloudinaryImage(cat.imageUrl),
+            fullUrl: getImageUrl(cat.imageUrl)
+          });
+        });
+      }
+      
       if (productsData && productsData.length > 0) {
         console.log('📦 First product details:', {
           name: productsData[0].name,
           isFeatured: productsData[0].isFeatured,
           isActive: productsData[0].isActive,
-          hasImages: productsData[0].images?.length > 0
+          hasImages: productsData[0].images?.length > 0,
+          imageUrl: productsData[0].images?.[0]
         });
       } else {
         console.log('⚠️ No featured products found. Trying to fetch regular products...');
         
-        // Fallback: If no featured products, get regular products
         try {
           const regularProducts = await productService.getProducts({ limit: 8 });
           if (regularProducts.products && regularProducts.products.length > 0) {
@@ -66,7 +77,6 @@ export function Home({ onNavigate }: HomeProps) {
       
       setCategories(categoriesData || []);
       
-      // Only set featured products if we got some
       if (productsData && productsData.length > 0) {
         setFeaturedProducts(productsData);
       }
@@ -263,37 +273,45 @@ export function Home({ onNavigate }: HomeProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category, index) => (
-              <button
-                key={category._id}
-                onClick={() => onNavigate('shop', { category: category.slug })}
-                className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 
-                         shadow-lg hover:shadow-2xl transition-all duration-500 
-                         transform hover:-translate-y-2 hover:scale-105 
-                         border border-gray-100 dark:border-gray-700
-                         animate-fadeIn"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="aspect-square">
-                  <img
-                    src={getImageUrl(category.imageUrl || '')}
-                    alt={getCategoryName(category)}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    onError={(e) => {
-                      console.error('Category image failed:', category.imageUrl);
-                      e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
-                    }}
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end">
-                  <p className="text-white font-semibold p-4 w-full text-center text-sm md:text-base
-                            transform group-hover:scale-105 group-hover:translate-y-[-4px] transition-all duration-300">
-                    {getCategoryName(category)}
-                  </p>
-                </div>
-                <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/20 transition-colors duration-500"></div>
-              </button>
-            ))}
+            {categories.map((category, index) => {
+              const imageUrl = getCategoryImageUrl(category);
+              return (
+                <button
+                  key={category._id}
+                  onClick={() => onNavigate('shop', { category: category.slug })}
+                  className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 
+                           shadow-lg hover:shadow-2xl transition-all duration-500 
+                           transform hover:-translate-y-2 hover:scale-105 
+                           border border-gray-100 dark:border-gray-700
+                           animate-fadeIn"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="aspect-square">
+                    <img
+                      src={imageUrl}
+                      alt={getCategoryName(category)}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      onLoad={() => console.log(`✅ Category image loaded: ${category.name}`)}
+                      onError={(e) => {
+                        console.error('❌ Category image failed:', {
+                          category: category.name,
+                          originalUrl: category.imageUrl,
+                          attemptedUrl: imageUrl
+                        });
+                        e.currentTarget.src = 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
+                      }}
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end">
+                    <p className="text-white font-semibold p-4 w-full text-center text-sm md:text-base
+                              transform group-hover:scale-105 group-hover:translate-y-[-4px] transition-all duration-300">
+                      {getCategoryName(category)}
+                    </p>
+                  </div>
+                  <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/20 transition-colors duration-500"></div>
+                </button>
+              );
+            })}
           </div>
         )}
       </section>
@@ -365,8 +383,13 @@ export function Home({ onNavigate }: HomeProps) {
                       src={getImageUrl(product.images?.[0])}
                       alt={getProductName(product)}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      onLoad={() => console.log(`✅ Product image loaded: ${product.name}`)}
                       onError={(e) => {
-                        console.error('Product image failed:', product.images?.[0]);
+                        console.error('❌ Product image failed:', {
+                          product: product.name,
+                          originalImage: product.images?.[0],
+                          attemptedUrl: getImageUrl(product.images?.[0])
+                        });
                         e.currentTarget.src = 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
                       }}
                     />
