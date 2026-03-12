@@ -14,6 +14,7 @@ console.log('🔧 Image Utils - FINAL_BASE_URL:', FINAL_BASE_URL);
 
 /**
  * Get the full URL for an image
+ * Works for both product images and category images
  * @param imagePath - The image path from the database (can be full URL, /uploads/... path)
  * @returns Full URL to the image
  */
@@ -26,12 +27,14 @@ export const getImageUrl = (imagePath: string | undefined | null): string => {
   }
   
   // If it's already a full URL (starts with http), return as is
+  // This handles Cloudinary URLs, Unsplash URLs, etc.
   if (imagePath.startsWith('http')) {
     console.log('🖼️ Using full URL (already has http):', imagePath);
     return imagePath;
   }
   
   // For any path that starts with /uploads/, append to FINAL_BASE_URL
+  // This handles both product and category uploads
   if (imagePath.startsWith('/uploads/')) {
     const fullUrl = `${FINAL_BASE_URL}${imagePath}`;
     console.log('🖼️ Constructed URL with full path:', fullUrl);
@@ -43,11 +46,33 @@ export const getImageUrl = (imagePath: string | undefined | null): string => {
 };
 
 /**
+ * Get category image URL with consistent handling
+ * Convenience wrapper for category images
+ */
+export const getCategoryImageUrl = (category: any): string => {
+  if (!category || !category.imageUrl) {
+    return 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=400';
+  }
+  return getImageUrl(category.imageUrl);
+};
+
+/**
+ * Get product image URL with consistent handling
+ * Convenience wrapper for product images
+ */
+export const getProductImageUrl = (product: any, index: number = 0): string => {
+  if (!product || !product.images || !product.images[index]) {
+    return 'https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=400';
+  }
+  return getImageUrl(product.images[index]);
+};
+
+/**
  * Check if image is from Cloudinary
  */
 export const isCloudinaryImage = (imagePath: string | undefined | null): boolean => {
   if (!imagePath) return false;
-  return imagePath.includes('cloudinary.com');
+  return imagePath.includes('cloudinary.com') || imagePath.includes('res.cloudinary.com');
 };
 
 /**
@@ -62,7 +87,7 @@ export const getOptimizedImageUrl = (
   
   const fullUrl = getImageUrl(imagePath);
   
-  if (!fullUrl.includes('cloudinary.com')) {
+  if (!isCloudinaryImage(fullUrl)) {
     return fullUrl;
   }
   
@@ -112,18 +137,70 @@ export const debugImage = async (url: string): Promise<boolean> => {
   });
 };
 
+/**
+ * Alias for debugImage to maintain backward compatibility
+ */
+export const testImageLoad = debugImage;
+
+/**
+ * Debug function to check all category images
+ */
+export const debugCategoryImages = async (categories: any[]): Promise<void> => {
+  console.log('📊 Debugging category images:');
+  for (const category of categories) {
+    const url = getImageUrl(category.imageUrl);
+    console.log(`\n📁 ${category.name}:`);
+    console.log(`   Original: ${category.imageUrl}`);
+    console.log(`   Processed: ${url}`);
+    await debugImage(url);
+  }
+};
+
+/**
+ * Debug function to check all product images
+ */
+export const debugProductImages = async (products: any[]): Promise<void> => {
+  console.log('📊 Debugging product images:');
+  for (const product of products) {
+    if (product.images && product.images.length > 0) {
+      const url = getImageUrl(product.images[0]);
+      console.log(`\n📦 ${product.name}:`);
+      console.log(`   Original: ${product.images[0]}`);
+      console.log(`   Processed: ${url}`);
+      await debugImage(url);
+    }
+  }
+};
+
 // Make it available globally for console debugging
 if (typeof window !== 'undefined') {
   (window as any).getImageUrl = getImageUrl;
   (window as any).debugImage = debugImage;
-  console.log('✅ Image utils available in console: try getImageUrl() or debugImage()');
+  (window as any).testImageLoad = testImageLoad;
+  (window as any).debugCategoryImages = debugCategoryImages;
+  (window as any).debugProductImages = debugProductImages;
+  (window as any).getCategoryImageUrl = getCategoryImageUrl;
+  (window as any).getProductImageUrl = getProductImageUrl;
+  console.log('✅ Image utils available in console:');
+  console.log('   - getImageUrl()');
+  console.log('   - debugImage()');
+  console.log('   - testImageLoad()');
+  console.log('   - debugCategoryImages()');
+  console.log('   - debugProductImages()');
+  console.log('   - getCategoryImageUrl()');
+  console.log('   - getProductImageUrl()');
 }
 
 export default {
   getImageUrl,
+  getCategoryImageUrl,
+  getProductImageUrl,
   isCloudinaryImage,
   getOptimizedImageUrl,
   getImageUrls,
   getPlaceholderImage,
-  debugImage
+  debugImage,
+  testImageLoad,
+  debugCategoryImages,
+  debugProductImages
 };
