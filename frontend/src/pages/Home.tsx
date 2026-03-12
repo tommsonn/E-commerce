@@ -478,7 +478,7 @@ export function Home({ onNavigate }: HomeProps) {
         <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl p-6 sm:p-8 md:p-10 lg:p-12 
                       border border-gray-100 dark:border-gray-700
                       transform hover:scale-[1.01] sm:hover:scale-[1.02] transition-all duration-500">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 md:gap-10 lg:gap-12">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-6 sm:gap-8 md:gap-10 lg:gap-12">
             <div className="text-center group">
               <div className="relative inline-block">
                 <Package className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-indigo-600 dark:text-indigo-400 mb-2 sm:mb-3 md:mb-4 
@@ -544,7 +544,7 @@ export function Home({ onNavigate }: HomeProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Card 1 */}
           <div className="group bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl shadow-md 
                         hover:shadow-xl transition-all duration-500 
