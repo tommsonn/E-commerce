@@ -1,10 +1,16 @@
-// Get the API base URL from environment variables
+// Get the API base URL from environment variables with a hardcoded fallback for production
 const API_URL = import.meta.env.VITE_API_URL || 'https://e-commerce-backend-9dhw.onrender.com/api';
 const BASE_URL = API_URL.replace('/api', '');
 
-console.log('🔧 Image Utils - Environment:', import.meta.env.MODE);
+// Force production URL if we're in production mode
+const FINAL_BASE_URL = import.meta.env.PROD 
+  ? 'https://e-commerce-backend-9dhw.onrender.com' 
+  : BASE_URL;
+
+console.log('🔧 Image Utils - Mode:', import.meta.env.MODE);
 console.log('🔧 Image Utils - API_URL:', API_URL);
 console.log('🔧 Image Utils - BASE_URL:', BASE_URL);
+console.log('🔧 Image Utils - FINAL_BASE_URL:', FINAL_BASE_URL);
 
 /**
  * Get the full URL for an image
@@ -25,23 +31,10 @@ export const getImageUrl = (imagePath: string | undefined | null): string => {
     return imagePath;
   }
   
-  // If it's a Cloudinary URL without protocol
-  if (imagePath.includes('cloudinary')) {
-    return imagePath;
-  }
-  
-  // For any path that starts with /uploads/, just append to BASE_URL
-  // This preserves the full path including subdirectories
+  // For any path that starts with /uploads/, append to FINAL_BASE_URL
   if (imagePath.startsWith('/uploads/')) {
-    const fullUrl = `${BASE_URL}${imagePath}`;
+    const fullUrl = `${FINAL_BASE_URL}${imagePath}`;
     console.log('🖼️ Constructed URL with full path:', fullUrl);
-    return fullUrl;
-  }
-  
-  // If it's a relative path that doesn't start with /uploads/, add it
-  if (!imagePath.startsWith('/')) {
-    const fullUrl = `${BASE_URL}/uploads/${imagePath}`;
-    console.log('🖼️ Constructed URL from relative path:', fullUrl);
     return fullUrl;
   }
   
@@ -118,6 +111,13 @@ export const debugImage = async (url: string): Promise<boolean> => {
     img.src = url;
   });
 };
+
+// Make it available globally for console debugging
+if (typeof window !== 'undefined') {
+  (window as any).getImageUrl = getImageUrl;
+  (window as any).debugImage = debugImage;
+  console.log('✅ Image utils available in console: try getImageUrl() or debugImage()');
+}
 
 export default {
   getImageUrl,
