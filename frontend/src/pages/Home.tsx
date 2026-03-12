@@ -544,7 +544,7 @@ export function Home({ onNavigate }: HomeProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Card 1 */}
           <div className="group bg-white dark:bg-gray-800 p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl shadow-md 
                         hover:shadow-xl transition-all duration-500 
