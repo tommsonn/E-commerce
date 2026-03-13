@@ -112,8 +112,8 @@ export function Footer({ onNavigate }: FooterProps) {
                   <Phone className="h-4 w-4 text-green-400" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-gray-400 group-hover:text-gray-300">+251 91 123 4567</span>
-                  <span className="text-gray-400 group-hover:text-gray-300">+251 92 987 6543</span>
+                  <span className="text-gray-400 group-hover:text-gray-300">+251 94 128 7842</span>
+                  <span className="text-gray-400 group-hover:text-gray-300">+251 90 234 7832</span>
                 </div>
               </li>
               <li className="flex items-start group">
