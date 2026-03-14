@@ -1,7 +1,8 @@
-import { Users, Target, Award, Heart, Shield, Truck, Clock, Star, ChevronRight } from 'lucide-react';
+import { Users, Target, Award, Heart, Shield, Truck, Star, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import thomasImage from '../assets/tom2.jpg';
+
 interface AboutProps {
   onNavigate: (page: string) => void;
 }
@@ -87,81 +88,182 @@ export function About({ onNavigate }: AboutProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 transition-colors duration-500">
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
+<section className="relative bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950/30 py-20 sm:py-28 overflow-hidden">
+  {/* Decorative Elements */}
+  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+  <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200/20 dark:bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+  
+  {/* Subtle pattern overlay */}
+  <div className="absolute inset-0 opacity-[0.02]">
+    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-900 dark:text-white"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+    </svg>
+  </div>
+  
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      {/* Left Content */}
+      <div className="space-y-6">
+        {/* Badge with animation */}
+        <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium border border-indigo-200 dark:border-indigo-800 animate-pulse">
+          <span className="relative flex h-2 w-2 mr-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+          </span>
+          <Shield className="h-4 w-4 mr-2" />
+          {t('About TomShop', 'ስለ ቶምሾፕ')}
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-indigo-100 text-sm font-medium mb-8 border border-white/20">
-              <Shield className="h-4 w-4 mr-2 text-indigo-300" />
-              {t('About TomShop', 'ስለ ቶምሾፕ')}
+        {/* Main Heading with Gradient */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+          {t('Your Trusted', 'የታመነ')}{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+            {t('Partner', 'አጋር')}
+          </span>
+          <br />
+          {t('in Online Shopping', 'በመስመር ላይ ግዢ')}
+        </h1>
+        
+        {/* Description with improved typography */}
+        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">
+          {t(
+            'We believe in the power of e-commerce to transform lives and create opportunities for everyone in Ethiopia. Our commitment to quality and customer satisfaction drives everything we do.',
+            'የኢ-ኮሜርስ ኃይል ሕይወትን ለመቀየር እና በኢትዮጵያ ውስጥ ለሁሉም ሰው እድሎችን ለመፍጠር እንደሚችል እናምናለን። ለጥራት እና ለደንበኛ እርካታ ያለን ቁርጠኝነት በምንሠራው ነገር ሁሉ ይመራናል።'
+          )}
+        </p>
+
+        {/* Quick Stats */}
+        <div className="flex flex-wrap gap-8 pt-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+              <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
-            
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-blue-200">
-                {t('Your Trusted Partner in Online Shopping', 'በመስመር ላይ ግዢ የታመነ አጋርዎ')}
-              </span>
-            </h1>
-            
-            <p className="text-xl text-indigo-100 mb-10 leading-relaxed max-w-2xl">
-              {t(
-                'We believe in the power of e-commerce to transform lives and create opportunities for everyone in Ethiopia.',
-                'የኢ-ኮሜርስ ኃይል ሕይወትን ለመቀየር እና በኢትዮጵያ ውስጥ ለሁሉም ሰው እድሎችን ለመፍጠር እንደሚችል እናምናለን።'
-              )}
-            </p>
-            
-            <button
-              onClick={() => onNavigate('shop')}
-              className="group bg-white text-indigo-900 px-8 py-4 rounded-xl font-semibold 
-                       hover:bg-indigo-50 transition-all duration-500 transform hover:scale-105 
-                       hover:shadow-2xl flex items-center space-x-3 relative overflow-hidden"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-200/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-              <span>{t('Start Shopping', 'ግዢ ይጀምሩ')}</span>
-              <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">50k+</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('Happy Customers', 'ደስተኛ ደንበኞች')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+              <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">50+</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('Cities', 'ከተሞች')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
+              <Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">4.9</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('Rating', 'ደረጃ')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <div className="pt-4">
+          <button
+            onClick={() => onNavigate('shop')}
+            className="group px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-base transition-all duration-300 transform hover:scale-105 hover:shadow-xl inline-flex items-center gap-2 relative overflow-hidden"
+          >
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+            <span>{t('Start Shopping', 'ግዢ ይጀምሩ')}</span>
+            <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+
+      {/* Right Content - Values Preview Cards */}
+      <div className="hidden lg:block relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
+        <div className="relative grid grid-cols-2 gap-4">
+          {/* Quality Card */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl">
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-indigo-600 dark:text-indigo-400">
+              <Target className="h-7 w-7" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('Quality', 'ጥራት')}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('Premium products', 'ከፍተኛ ምርቶች')}</p>
+          </div>
+          
+          {/* Customer First Card */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl mt-8">
+            <div className="bg-purple-50 dark:bg-purple-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400">
+              <Users className="h-7 w-7" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('Customer First', 'ደንበኛ መጀመሪያ')}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('24/7 support', '24/7 ድጋፍ')}</p>
+          </div>
+          
+          {/* Excellence Card */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl">
+            <div className="bg-green-50 dark:bg-green-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
+              <Award className="h-7 w-7" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('Excellence', 'ልህቀት')}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('Best service', 'ምርጥ አገልግሎት')}</p>
+          </div>
+          
+          {/* Integrity Card */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl mt-8">
+            <div className="bg-amber-50 dark:bg-amber-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-amber-600 dark:text-amber-400">
+              <Heart className="h-7 w-7" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('Integrity', 'ታማኝነት')}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('Trustworthy', 'ታማኝ')}</p>
           </div>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-50 via-slate-50/50 to-transparent dark:from-slate-950 dark:via-slate-950/50"></div>
-      </section>
+        {/* Floating Badge */}
+        <div className="absolute -bottom-4 -right-4 bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+          {t('Since 2020', 'ከ2020')}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-      {/* Mission & Vision */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      {/* Mission & Vision - Clean cards like product cards */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
-            <span className="inline-block px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-sm font-medium">
+            <span className="inline-block px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm font-medium">
               {t('Our Mission', 'ተልዕኮአችን')}
             </span>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
               {t('Connecting Ethiopia Through Commerce', 'ኢትዮጵያን በንግድ ማገናኘት')}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
               {t(
                 'TomShop was founded with a simple mission: to make quality products accessible to everyone in Ethiopia. We connect local sellers with buyers across the nation, creating opportunities and building trust.',
                 'ቶምሾፕ የተመሰረተው ጥራት ያላቸውን ምርቶች በኢትዮጵያ ውስጥ ላሉ ሁሉ ተደራሽ ለማድረግ በሚል ቀላል ተልዕኮ ነው። የሀገር ውስጥ ሻጮችን ከገዢዎች ጋር በማገናኘት እድሎችን እንፈጥራለን እና መተማመንን እንገነባለን።'
               )}
             </p>
             
-            <div className="grid grid-cols-2 gap-6 pt-6">
-              <div className="flex items-center space-x-3">
-                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-full">
+            <div className="flex gap-6 pt-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-xl">
                   <Truck className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">50+</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">50+</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{t('Cities', 'ከተሞች')}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-full">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-xl">
                   <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">50k+</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">50k+</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{t('Customers', 'ደንበኞች')}</p>
                 </div>
               </div>
@@ -169,21 +271,21 @@ export function About({ onNavigate }: AboutProps) {
           </div>
           
           <div className="relative">
-            <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
+            <div className="aspect-square rounded-2xl overflow-hidden shadow-lg">
               <img
                 src="https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=600"
                 alt="Ethiopian marketplace"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center space-x-4">
-                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-full">
-                  <Star className="h-6 w-6 text-indigo-600 dark:text-indigo-400 fill-current" />
+            <div className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg">
+                  <Star className="h-5 w-5 text-indigo-600 dark:text-indigo-400 fill-current" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">4.9</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('Customer Rating', 'የደንበኛ ደረጃ')}</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">4.9</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{t('Customer Rating', 'የደንበኛ ደረጃ')}</p>
                 </div>
               </div>
             </div>
@@ -191,141 +293,158 @@ export function About({ onNavigate }: AboutProps) {
         </div>
       </section>
 
-      {/* Core Values */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-sm font-medium mb-4">
-            {t('Our Core Values', 'ዋና እሴቶቻችን')}
+{/* Core Values - Product card style with Preview Cards Design */}
+<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+  <div className="text-center mb-12">
+    <span className="inline-block px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm font-medium mb-4">
+      {t('Our Core Values', 'ዋና እሴቶቻችን')}
+    </span>
+    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+      {t('What Drives Us', 'የሚያንቀሳቅሰን')}
+    </h2>
+    <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+      {t('The principles that guide everything we do', 'እኛ የምንሰራውን ሁሉ የሚመሩ መርሆች')}
+    </p>
+  </div>
+
+  {/* Core Values Cards with Preview Design */}
+  <div className="relative">
+    {/* Background gradient effect */}
+    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-3xl blur-3xl"></div>
+    
+    <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* Quality Card */}
+      <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+          <Target className="h-7 w-7" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          {t('Quality', 'ጥራት')}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          {t('We ensure all products meet high quality standards', 'ሁሉም ምርቶች ከፍተኛ የጥራት ደረጃ እንዲያሟሉ እናረጋግጣለን')}
+        </p>
+      </div>
+      
+      {/* Customer First Card */}
+      <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl lg:mt-8">
+        <div className="bg-purple-50 dark:bg-purple-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+          <Users className="h-7 w-7" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+          {t('Customer First', 'ደንበኛ መጀመሪያ')}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          {t('Your satisfaction is our top priority', 'እርካታዎ ቅድሚያ የምንሰጠው ጉዳይ ነው')}
+        </p>
+      </div>
+      
+      {/* Excellence Card */}
+      <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl">
+        <div className="bg-green-50 dark:bg-green-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-green-600 dark:text-green-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+          <Award className="h-7 w-7" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+          {t('Excellence', 'ልህቀት')}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          {t('We strive for excellence in everything we do', 'በምንሠራው ሁሉ ልህቀትን እንጥራለን')}
+        </p>
+      </div>
+      
+      {/* Integrity Card */}
+      <div className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transform hover:-translate-y-2 transition-all duration-300 hover:shadow-2xl lg:mt-8">
+        <div className="bg-amber-50 dark:bg-amber-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-4 text-amber-600 dark:text-amber-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+          <Heart className="h-7 w-7" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+          {t('Integrity', 'ታማኝነት')}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          {t('We conduct business with honesty and transparency', 'ንግድን በሐቀኝነት እና ግልጽነት እንመራለን')}
+        </p>
+      </div>
+    </div>
+    
+    {/* Floating decoration */}
+    <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-indigo-100 dark:bg-indigo-900/20 rounded-full blur-2xl"></div>
+    <div className="absolute -top-4 -left-4 w-20 h-20 bg-purple-100 dark:bg-purple-900/20 rounded-full blur-2xl"></div>
+  </div>
+</section>
+
+      {/* Milestones - Clean timeline */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="text-center mb-12">
+          <span className="inline-block px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm font-medium mb-4">
+            {t('Our Journey', 'ጉዟችን')}
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            {t('What Drives Us', 'የሚያንቀሳቅሰን')}
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            {t('Key Milestones', 'ዋና ዋና ክንውኖች')}
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            {t('The principles that guide everything we do', 'እኛ የምንሰራውን ሁሉ የሚመሩ መርሆች')}
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            {t('How we grew to become Ethiopia\'s trusted marketplace', 'እንዴት የኢትዮጵያ ታማኝ የገበያ ቦታ ለመሆን እንደበቃን')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {values.map((value, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {milestones.map((milestone, index) => (
             <div
               key={index}
-              className="group bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg 
-                       hover:shadow-2xl transition-all duration-500 
-                       transform hover:-translate-y-2 hover:scale-105
-                       border border-gray-100 dark:border-gray-700
-                       relative overflow-hidden"
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-xl 
+                       transition-all duration-500 transform hover:-translate-y-1
+                       border border-gray-100 dark:border-gray-700"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/0 to-indigo-600/0 
-                            group-hover:from-indigo-600/5 group-hover:to-indigo-600/0 
-                            transition-all duration-500"></div>
-              
-              <div className="relative">
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 
-                              dark:from-indigo-900/30 dark:to-indigo-800/30 
-                              w-16 h-16 rounded-2xl flex items-center justify-center 
-                              mb-6 group-hover:scale-110 group-hover:rotate-3 
-                              transition-all duration-500 text-indigo-600 dark:text-indigo-400">
-                  {value.icon}
-                </div>
-                
-                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white 
-                             group-hover:text-indigo-600 dark:group-hover:text-indigo-400 
-                             transition-colors">
-                  {value.title}
-                </h3>
-                
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {value.description}
-                </p>
-              </div>
+              <span className="inline-block px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm font-medium mb-4">
+                {milestone.year}
+              </span>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                {milestone.title}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {milestone.description}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Milestones/Timeline */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-sm font-medium mb-4">
-            {t('Our Journey', 'ጉዟችን')}
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            {t('Key Milestones', 'ዋና ዋና ክንውኖች')}
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            {t('How we grew to become Ethiopia\'s trusted marketplace', 'እንዴት የኢትዮጵያ ታማኝ የገበያ ቦታ ለመሆን እንደበቃን')}
-          </p>
-        </div>
-
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-indigo-200 to-indigo-600 dark:from-indigo-800 dark:to-indigo-400 rounded-full"></div>
-          
-          <div className="space-y-12">
-            {milestones.map((milestone, index) => (
-              <div
-                key={index}
-                className={`relative flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
-              >
-                <div className="w-1/2"></div>
-                <div className="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-full border-4 border-white dark:border-gray-900 shadow-lg z-10"></div>
-                <div className={`w-1/2 ${index % 2 === 0 ? 'pr-12 text-right' : 'pl-12'}`}>
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
-                    <span className="inline-block px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm font-medium mb-3">
-                      {milestone.year}
-                    </span>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      {milestone.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {milestone.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-sm font-medium mb-4">
+      {/* Team Section - Product card style */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="text-center mb-12">
+          <span className="inline-block px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs sm:text-sm font-medium mb-4">
             {t('Our Team', 'ቡድናችን')}
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             {t('Meet the People Behind TomShop', 'ከቶምሾፕ በስተጀርባ ያሉ ሰዎችን ይወቁ')}
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {t('Dedicated professionals working to serve you better', 'እርስዎን በተሻለ ለማገልገል የሚሰሩ ቁርጠኛ ባለሙያዎች')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {teamMembers.map((member, index) => (
             <div
               key={index}
-              className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg 
-                       hover:shadow-2xl transition-all duration-500 
-                       transform hover:-translate-y-2 overflow-hidden
-                       border border-gray-100 dark:border-gray-700"
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl 
+                       transition-all duration-500 transform hover:-translate-y-1 hover:scale-105
+                       overflow-hidden border border-gray-100 dark:border-gray-700"
             >
-              <div className="aspect-square overflow-hidden">
+              <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
                 <img
                   src={member.image}
                   alt={member.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              <div className="p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-indigo-600 transition-colors">
                   {member.name}
                 </h3>
-                <p className="text-indigo-600 dark:text-indigo-400 font-medium mb-3">
+                <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium mb-2">
                   {member.role}
                 </p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   {member.bio}
                 </p>
               </div>
@@ -334,52 +453,49 @@ export function About({ onNavigate }: AboutProps) {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-gradient-to-br from-indigo-900 to-blue-900 dark:from-slate-900 dark:to-indigo-950 rounded-3xl p-12 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
-          </div>
-          
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="group">
-              <div className="text-5xl font-bold mb-3 group-hover:scale-110 transition-transform">50,000+</div>
-              <p className="text-indigo-200 text-lg">{t('Happy Customers', 'ደስተኛ ደንበኞች')}</p>
-              <div className="w-16 h-1 bg-indigo-400 mx-auto mt-4 rounded-full group-hover:w-24 transition-all"></div>
+      {/* Stats Section - Clean stats like home page */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-gray-700">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div className="text-center group">
+              <div className="text-3xl sm:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform">
+                50,000+
+              </div>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{t('Happy Customers', 'ደስተኛ ደንበኞች')}</p>
+              <div className="w-12 h-1 bg-indigo-200 dark:bg-indigo-800 mx-auto mt-3 rounded-full group-hover:w-16 transition-all"></div>
             </div>
-            <div className="group">
-              <div className="text-5xl font-bold mb-3 group-hover:scale-110 transition-transform">10,000+</div>
-              <p className="text-indigo-200 text-lg">{t('Products', 'ምርቶች')}</p>
-              <div className="w-16 h-1 bg-indigo-400 mx-auto mt-4 rounded-full group-hover:w-24 transition-all"></div>
+            <div className="text-center group">
+              <div className="text-3xl sm:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform">
+                10,000+
+              </div>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{t('Products', 'ምርቶች')}</p>
+              <div className="w-12 h-1 bg-indigo-200 dark:bg-indigo-800 mx-auto mt-3 rounded-full group-hover:w-16 transition-all"></div>
             </div>
-            <div className="group">
-              <div className="text-5xl font-bold mb-3 group-hover:scale-110 transition-transform">99%</div>
-              <p className="text-indigo-200 text-lg">{t('Satisfaction Rate', 'የእርካታ መጠን')}</p>
-              <div className="w-16 h-1 bg-indigo-400 mx-auto mt-4 rounded-full group-hover:w-24 transition-all"></div>
+            <div className="text-center group">
+              <div className="text-3xl sm:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform">
+                99%
+              </div>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{t('Satisfaction Rate', 'የእርካታ መጠን')}</p>
+              <div className="w-12 h-1 bg-indigo-200 dark:bg-indigo-800 mx-auto mt-3 rounded-full group-hover:w-16 transition-all"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      {/* CTA Section - Simple like home page */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         <div className="text-center">
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             {t('Ready to Start Shopping?', 'ለመግዛት ዝግጁ ነዎት?')}
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
             {t('Join thousands of happy customers and experience the best online shopping in Ethiopia', 
                'ከሺዎች ደስተኛ ደንበኞች ጋር ይቀላቀሉ እና በኢትዮጵያ ምርጥ የመስመር ላይ ግብይት ይለማመዱ')}
           </p>
           <button
             onClick={() => onNavigate('shop')}
-            className="group bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 
-                     rounded-xl font-semibold text-lg transition-all duration-500 
-                     transform hover:scale-105 hover:shadow-2xl
-                     inline-flex items-center space-x-3 relative overflow-hidden"
+            className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-base transition-all duration-300 transform hover:scale-105 hover:shadow-xl inline-flex items-center gap-2 group"
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
             <span>{t('Shop Now', 'አሁን ግዙ')}</span>
             <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </button>
