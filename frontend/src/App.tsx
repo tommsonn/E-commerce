@@ -3,6 +3,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
 import { Home } from './pages/Home';
 import { Shop } from './pages/Shop';
 import { ProductDetail } from './pages/ProductDetail';
@@ -45,7 +47,8 @@ type Page =
   | 'payment-status'
   | 'payment-callback';
 
-function App() {
+// Inner component that has access to auth context
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [productSlug, setProductSlug] = useState<string>('');
   const [initialCategory, setInitialCategory] = useState<string>('');
@@ -54,6 +57,9 @@ function App() {
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [selectedMessageId, setSelectedMessageId] = useState<string | undefined>();
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | undefined>();
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  
+  const { user } = useAuth();
 
   // Check URL for parameters on mount and URL changes
   useEffect(() => {
@@ -115,6 +121,34 @@ function App() {
       window.removeEventListener('popstate', checkUrlParams);
     };
   }, []);
+
+  // Handle auth loading state
+  useEffect(() => {
+    // Simulate auth loading check
+    const timer = setTimeout(() => {
+      setIsAuthLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [user]);
+
+  // Redirect admins to admin dashboard after login
+  useEffect(() => {
+    // Only redirect if auth is not loading
+    if (!isAuthLoading) {
+      // If user is admin and currently on home page, redirect to admin dashboard
+      if (user?.isAdmin && currentPage === 'home') {
+        console.log('Admin user detected on home page, redirecting to admin dashboard');
+        handleNavigate('admin');
+      }
+      
+      // If user is not admin and somehow landed on admin page, redirect to home
+      if (user && !user.isAdmin && currentPage === 'admin') {
+        console.log('Non-admin user tried to access admin page, redirecting to home');
+        handleNavigate('home');
+      }
+    }
+  }, [user, isAuthLoading, currentPage]);
 
   const handleNavigate = (page: string, data?: any) => {
     console.log('Navigating to:', page, data);
@@ -242,22 +276,38 @@ function App() {
         return <Checkout onNavigate={handleNavigate} />;
       
       case 'orders':
-        return <Orders onNavigate={handleNavigate} />;
+        return (
+          <ProtectedRoute onNavigate={handleNavigate}>
+            <Orders onNavigate={handleNavigate} />
+          </ProtectedRoute>
+        );
       
       case 'login':
         return <Auth onNavigate={handleNavigate} />;
       
       case 'admin':
-        return <Admin onNavigate={handleNavigate} />;
+        return (
+          <ProtectedRoute requireAdmin={true} onNavigate={handleNavigate}>
+            <Admin onNavigate={handleNavigate} />
+          </ProtectedRoute>
+        );
       
       case 'admin-payments':
-        return <AdminPayments onNavigate={handleNavigate} />;
+        return (
+          <ProtectedRoute requireAdmin={true} onNavigate={handleNavigate}>
+            <AdminPayments onNavigate={handleNavigate} />
+          </ProtectedRoute>
+        );
       
       case 'admin-payment-detail':
-        return <AdminPaymentDetail 
-          onNavigate={handleNavigate} 
-          paymentId={selectedPaymentId} 
-        />;
+        return (
+          <ProtectedRoute requireAdmin={true} onNavigate={handleNavigate}>
+            <AdminPaymentDetail 
+              onNavigate={handleNavigate} 
+              paymentId={selectedPaymentId} 
+            />
+          </ProtectedRoute>
+        );
       
       case 'contact':
         return <Contact onNavigate={handleNavigate} />;
@@ -266,37 +316,65 @@ function App() {
         return <About onNavigate={handleNavigate} />;
       
       case 'profile':
-        return <Profile onNavigate={handleNavigate} />;
+        return (
+          <ProtectedRoute onNavigate={handleNavigate}>
+            <Profile onNavigate={handleNavigate} />
+          </ProtectedRoute>
+        );
       
       case 'notifications':
-        return <NotificationsPage onNavigate={handleNavigate} />;
+        return (
+          <ProtectedRoute onNavigate={handleNavigate}>
+            <NotificationsPage onNavigate={handleNavigate} />
+          </ProtectedRoute>
+        );
       
       case 'notification-settings':
-        return <NotificationSettings onNavigate={handleNavigate} />;
+        return (
+          <ProtectedRoute onNavigate={handleNavigate}>
+            <NotificationSettings onNavigate={handleNavigate} />
+          </ProtectedRoute>
+        );
       
       case 'verify-email':
         return <VerifyEmail onNavigate={handleNavigate} token={verificationToken} />;
       
       case 'my-messages':
-        return <MyMessages onNavigate={handleNavigate} messageId={selectedMessageId} />;
+        return (
+          <ProtectedRoute onNavigate={handleNavigate}>
+            <MyMessages onNavigate={handleNavigate} messageId={selectedMessageId} />
+          </ProtectedRoute>
+        );
       
       case 'payment-status':
-  return <PaymentStatus 
-    onNavigate={handleNavigate} 
-    orderId={paymentOrderId} 
-    status={paymentStatus} 
-  />;
+        return <PaymentStatus 
+          onNavigate={handleNavigate} 
+          orderId={paymentOrderId} 
+          status={paymentStatus} 
+        />;
 
-case 'payment-callback':
-  return <PaymentStatus 
-    onNavigate={handleNavigate} 
-    status={paymentStatus} 
-  />;
+      case 'payment-callback':
+        return <PaymentStatus 
+          onNavigate={handleNavigate} 
+          status={paymentStatus} 
+        />;
       
       default:
         return <Home onNavigate={handleNavigate} />;
     }
   };
+
+  // Show loading state while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Pages that should not show header and footer
   const isAuthPage = currentPage === 'login';
@@ -306,33 +384,40 @@ case 'payment-callback':
                      currentPage === 'payment-callback';
 
   return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex flex-col transition-colors duration-500">
+      
+      {/* Header - Hidden on login page, verify email page, payment status page, and payment callback */}
+      {!isAuthPage && currentPage !== 'verify-email' && 
+       currentPage !== 'payment-status' && currentPage !== 'payment-callback' && (
+        <Header 
+          onNavigate={handleNavigate} 
+          currentPage={currentPage} 
+        />
+      )}
+      
+      {/* Main Content */}
+      <main className="flex-grow">
+        {renderPage()}
+      </main>
+      
+      {/* Footer - Hidden on login, checkout, verify email, payment status, and payment callback pages */}
+      {!isAuthPage && !isFullPage && (
+        <Footer 
+          onNavigate={handleNavigate} 
+        />
+      )}
+    </div>
+  );
+}
+
+// Main App component with providers
+function App() {
+  return (
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
           <CartProvider>
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex flex-col transition-colors duration-500">
-              
-              {/* Header - Hidden on login page, verify email page, payment status page, and payment callback */}
-              {!isAuthPage && currentPage !== 'verify-email' && 
-               currentPage !== 'payment-status' && currentPage !== 'payment-callback' && (
-                <Header 
-                  onNavigate={handleNavigate} 
-                  currentPage={currentPage} 
-                />
-              )}
-              
-              {/* Main Content */}
-              <main className="flex-grow">
-                {renderPage()}
-              </main>
-              
-              {/* Footer - Hidden on login, checkout, verify email, payment status, and payment callback pages */}
-              {!isAuthPage && !isFullPage && (
-                <Footer 
-                  onNavigate={handleNavigate} 
-                />
-              )}
-            </div>
+            <AppContent />
           </CartProvider>
         </AuthProvider>
       </LanguageProvider>
