@@ -14,18 +14,34 @@ import {
   Mail, 
   Settings,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  BarChart3,
+  CreditCard,
+  Users,
+  ShoppingBag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
-import { NotificationBell } from './NotificationBell';
+import { NotificationBell } from '../components/NotificationBell';
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
   currentPage: string;
 }
+
+// Define types for navigation items
+interface BaseNavItem {
+  id: string;
+  label: string;
+}
+
+interface NavItemWithIcon extends BaseNavItem {
+  icon: JSX.Element;
+}
+
+type NavItem = BaseNavItem | NavItemWithIcon;
 
 export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -36,12 +52,27 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
-  const navItems = [
+  // Regular navigation items for non-admin users ONLY (no icons)
+  const regularNavItems: BaseNavItem[] = !isAdmin ? [
     { id: 'home', label: t('Home', 'ቤት') },
     { id: 'shop', label: t('Shop', 'መደብር') },
     { id: 'about', label: t('About', 'ስለ እኛ') },
     { id: 'contact', label: t('Contact', 'አግኙን') },
-  ];
+  ] : [];
+
+  // Admin only navigation items (with icons)
+  const adminNavItems: NavItemWithIcon[] = isAdmin ? [
+    { id: 'admin', label: t('Dashboard', 'ዳሽቦርድ'), icon: <BarChart3 className="h-4 w-4 mr-2" /> },
+    // You can add more admin nav items here if needed
+  ] : [];
+
+  // Combine based on role - but only show one set
+  const navItems: NavItem[] = isAdmin ? adminNavItems : regularNavItems;
+
+  // Type guard to check if an item has an icon
+  const hasIcon = (item: NavItem): item is NavItemWithIcon => {
+    return 'icon' in item;
+  };
 
   const handleNavigate = (page: string) => {
     onNavigate(page);
@@ -59,10 +90,10 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           
-          {/* Logo */}
+          {/* Logo - Clicking logo goes to home for regular users, admin dashboard for admins */}
           <div
             className="flex items-center cursor-pointer group"
-            onClick={() => handleNavigate('home')}
+            onClick={() => handleNavigate(isAdmin ? 'admin' : 'home')}
           >
             <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800/40 transition-colors">
               <ShoppingCart className="h-6 w-6 md:h-8 md:w-8 text-indigo-600 dark:text-indigo-400" />
@@ -70,48 +101,41 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             <span className="ml-2 text-lg md:text-xl font-bold text-gray-900 dark:text-white">
               {t('TomShop', 'ቶምሾፕ')}
             </span>
+            {isAdmin && (
+              <span className="ml-2 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-medium rounded-full">
+                {t('Admin', 'አስተዳዳሪ')}
+              </span>
+            )}
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavigate(item.id)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
-                  ${currentPage === item.id
-                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
-                  }`}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            {isAdmin && (
-              <button
-                onClick={() => handleNavigate('admin')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
-                  ${currentPage === 'admin'
-                    ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-purple-600 dark:hover:text-purple-400'
-                  }`}
-              >
-                <div className="flex items-center space-x-1">
-                  <Shield className="h-4 w-4" />
-                  <span>{t('Admin', 'አስተዳዳሪ')}</span>
-                </div>
-              </button>
-            )}
-          </nav>
+          {/* Desktop Navigation - Only show if there are items to show */}
+          {navItems.length > 0 && (
+            <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigate(item.id)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center
+                    ${currentPage === item.id || (item.id.startsWith('admin') && currentPage.startsWith('admin'))
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    }`}
+                >
+                  {/* Only render icon if it exists (for admin items) */}
+                  {hasIcon(item) && item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          )}
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
             
-            {/* Notification Bell */}
+            {/* Notification Bell - Show for all users (admins might need notifications too) */}
             <NotificationBell onNavigate={handleNavigate} />
             
-            {/* Theme Toggle */}
+            {/* Theme Toggle - Show for all users */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg text-gray-700 dark:text-gray-200 
@@ -122,7 +146,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
 
-            {/* Language Toggle */}
+            {/* Language Toggle - Show for all users */}
             <button
               onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
               className="flex items-center px-3 py-2 rounded-lg
@@ -136,26 +160,28 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               </span>
             </button>
 
-            {/* Cart */}
-            <button
-              onClick={() => handleNavigate('cart')}
-              className="relative p-2 rounded-lg text-gray-700 dark:text-gray-200 
-                       hover:bg-gray-100 dark:hover:bg-gray-800 
-                       transition-colors duration-200"
-              aria-label="Shopping cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-indigo-600 dark:bg-indigo-500 
-                               text-white text-xs font-bold rounded-full 
-                               h-5 w-5 flex items-center justify-center
-                               animate-pulse">
-                  {totalItems}
-                </span>
-              )}
-            </button>
+            {/* Cart - Only show for non-admin users */}
+            {!isAdmin && (
+              <button
+                onClick={() => handleNavigate('cart')}
+                className="relative p-2 rounded-lg text-gray-700 dark:text-gray-200 
+                         hover:bg-gray-100 dark:hover:bg-gray-800 
+                         transition-colors duration-200"
+                aria-label="Shopping cart"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-indigo-600 dark:bg-indigo-500 
+                                 text-white text-xs font-bold rounded-full 
+                                 h-5 w-5 flex items-center justify-center
+                                 animate-pulse">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+            )}
 
-            {/* User Menu */}
+            {/* User Menu - Show for all authenticated users */}
             {user ? (
               <div className="relative">
                 <button
@@ -167,7 +193,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                 >
                   <div className="bg-indigo-100 dark:bg-indigo-900/30 rounded-full p-1 relative">
                     <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                    {!user?.isEmailVerified && (
+                    {!user?.isEmailVerified && !isAdmin && (
                       <span className="absolute -top-1 -right-1 bg-yellow-500 rounded-full h-2 w-2 animate-pulse"></span>
                     )}
                   </div>
@@ -177,7 +203,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu - FIXED SPACING */}
+                {/* Dropdown Menu */}
                 {userMenuOpen && (
                   <>
                     <div
@@ -188,7 +214,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                                   rounded-lg shadow-xl border border-gray-100 dark:border-gray-700
                                   animate-slideDown overflow-hidden z-50">
                       
-                      {/* User Info - REDUCED PADDING */}
+                      {/* User Info */}
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <div className="flex items-center space-x-3">
                           <div className="bg-indigo-100 dark:bg-indigo-900/30 rounded-full p-2">
@@ -205,8 +231,8 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                           </div>
                         </div>
                         
-                        {/* Email Verification Warning */}
-                        {!user?.isEmailVerified && (
+                        {/* Email Verification Warning - Only for non-admin users */}
+                        {!user?.isEmailVerified && !isAdmin && (
                           <button
                             onClick={() => {
                               setUserMenuOpen(false);
@@ -224,11 +250,12 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                         )}
                       </div>
                       
-                      {/* Menu Items - REDUCED SPACING */}
-                      <div className="py-1"> {/* Changed from py-2 to py-1 */}
+                      {/* Menu Items - Conditional based on user role */}
+                      <div className="py-1">
+                        {/* Profile - Show for all users */}
                         <button
                           onClick={() => handleNavigate('profile')}
-                          className="flex items-center w-full px-4 py-2 text-sm  {/* Changed from py-3 to py-2 */}
+                          className="flex items-center w-full px-4 py-2 text-sm
                                    text-gray-700 dark:text-gray-200 
                                    hover:bg-gray-50 dark:hover:bg-gray-700 
                                    transition-colors"
@@ -237,31 +264,52 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                           {t('My Profile', 'መገለጫዬ')}
                         </button>
 
-                        <button
-                          onClick={() => handleNavigate('orders')}
-                          className="flex items-center w-full px-4 py-2 text-sm  {/* Changed from py-3 to py-2 */}
-                                   text-gray-700 dark:text-gray-200 
-                                   hover:bg-gray-50 dark:hover:bg-gray-700 
-                                   transition-colors"
-                        >
-                          <Package className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
-                          {t('My Orders', 'ትዕዛዞቼ')}
-                        </button>
+                        {/* Admin Dashboard Link - Only for admin users */}
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleNavigate('admin')}
+                            className="flex items-center w-full px-4 py-2 text-sm
+                                     text-gray-700 dark:text-gray-200 
+                                     hover:bg-gray-50 dark:hover:bg-gray-700 
+                                     transition-colors"
+                          >
+                            <BarChart3 className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
+                            {t('Admin Dashboard', 'የአስተዳዳሪ ዳሽቦርድ')}
+                          </button>
+                        )}
 
-                        <button
-                          onClick={() => handleNavigate('my-messages')}
-                          className="flex items-center w-full px-4 py-2 text-sm  {/* Changed from py-3 to py-2 */}
-                                   text-gray-700 dark:text-gray-200 
-                                   hover:bg-gray-50 dark:hover:bg-gray-700 
-                                   transition-colors"
-                        >
-                          <MessageSquare className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
-                          {t('My Messages', 'መልእክቶቼ')}
-                        </button>
+                        {/* Orders - Show for non-admin users only */}
+                        {!isAdmin && (
+                          <button
+                            onClick={() => handleNavigate('orders')}
+                            className="flex items-center w-full px-4 py-2 text-sm
+                                     text-gray-700 dark:text-gray-200 
+                                     hover:bg-gray-50 dark:hover:bg-gray-700 
+                                     transition-colors"
+                          >
+                            <Package className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
+                            {t('My Orders', 'ትዕዛዞቼ')}
+                          </button>
+                        )}
 
+                        {/* Messages - Show for non-admin users only */}
+                        {!isAdmin && (
+                          <button
+                            onClick={() => handleNavigate('my-messages')}
+                            className="flex items-center w-full px-4 py-2 text-sm
+                                     text-gray-700 dark:text-gray-200 
+                                     hover:bg-gray-50 dark:hover:bg-gray-700 
+                                     transition-colors"
+                          >
+                            <MessageSquare className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
+                            {t('My Messages', 'መልእክቶቼ')}
+                          </button>
+                        )}
+
+                        {/* Notifications - Show for all users */}
                         <button
                           onClick={() => handleNavigate('notifications')}
-                          className="flex items-center w-full px-4 py-2 text-sm  {/* Changed from py-3 to py-2 */}
+                          className="flex items-center w-full px-4 py-2 text-sm
                                    text-gray-700 dark:text-gray-200 
                                    hover:bg-gray-50 dark:hover:bg-gray-700 
                                    transition-colors"
@@ -270,24 +318,25 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                           <span className="flex-1">{t('Notifications', 'ማሳወቂያዎች')}</span>
                         </button>
 
+                        {/* Notification Settings - Show for all users */}
                         <button
                           onClick={() => handleNavigate('notification-settings')}
-                          className="flex items-center w-full px-4 py-2 text-sm  {/* Changed from py-3 to py-2 */}
+                          className="flex items-center w-full px-4 py-2 text-sm
                                    text-gray-700 dark:text-gray-200 
                                    hover:bg-gray-50 dark:hover:bg-gray-700 
                                    transition-colors"
                         >
                           <Settings className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
-                          {t('Notification Settings', 'የማሳወቂያ ቅንብሮች')}
+                          {t('Settings', 'ቅንብሮች')}
                         </button>
                       </div>
 
-                      <div className="border-t border-gray-100 dark:border-gray-700 my-1" /> {/* Changed from my-2 to my-1 */}
+                      <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
 
                       {/* Sign Out */}
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center w-full px-4 py-2 text-sm  {/* Changed from py-3 to py-2 */}
+                        className="flex items-center w-full px-4 py-2 text-sm
                                  text-red-600 dark:text-red-400 
                                  hover:bg-red-50 dark:hover:bg-red-900/20 
                                  transition-colors"
@@ -333,35 +382,74 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                       animate-slideDown">
           <div className="px-4 pt-2 pb-3 space-y-1">
             
-            {/* Mobile Navigation */}
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavigate(item.id)}
-                className={`block w-full text-left px-4 py-3 rounded-lg text-base font-medium
-                  ${currentPage === item.id
-                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  } transition-colors duration-200`}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            {isAdmin && (
-              <button
-                onClick={() => handleNavigate('admin')}
-                className={`block w-full text-left px-4 py-3 rounded-lg text-base font-medium
-                  ${currentPage === 'admin'
-                    ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  } transition-colors duration-200`}
-              >
-                <div className="flex items-center">
-                  <Shield className="h-5 w-5 mr-2" />
-                  {t('Admin', 'አስተዳዳሪ')}
-                </div>
-              </button>
+            {/* Mobile Navigation - Only show admin items for admin users */}
+            {isAdmin ? (
+              // Admin Mobile Navigation
+              <>
+                <button
+                  onClick={() => handleNavigate('admin')}
+                  className={`flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === 'admin' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                >
+                  <BarChart3 className="h-5 w-5 mr-3" />
+                  {t('Dashboard', 'ዳሽቦርድ')}
+                </button>
+                <button
+                  onClick={() => handleNavigate('admin-products')}
+                  className={`flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === 'admin-products' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                >
+                  <Package className="h-5 w-5 mr-3" />
+                  {t('Products', 'ምርቶች')}
+                </button>
+                <button
+                  onClick={() => handleNavigate('admin-orders')}
+                  className={`flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === 'admin-orders' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                >
+                  <ShoppingBag className="h-5 w-5 mr-3" />
+                  {t('Orders', 'ትዕዛዞች')}
+                </button>
+                <button
+                  onClick={() => handleNavigate('admin-customers')}
+                  className={`flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === 'admin-customers' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                >
+                  <Users className="h-5 w-5 mr-3" />
+                  {t('Customers', 'ደንበኞች')}
+                </button>
+                <button
+                  onClick={() => handleNavigate('admin-payments')}
+                  className={`flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === 'admin-payments' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                >
+                  <CreditCard className="h-5 w-5 mr-3" />
+                  {t('Payments', 'ክፍያዎች')}
+                </button>
+                <button
+                  onClick={() => handleNavigate('admin-contacts')}
+                  className={`flex items-center w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === 'admin-contacts' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                >
+                  <MessageSquare className="h-5 w-5 mr-3" />
+                  {t('Messages', 'መልእክቶች')}
+                </button>
+              </>
+            ) : (
+              // Regular User Mobile Navigation
+              regularNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigate(item.id)}
+                  className={`block w-full text-left px-4 py-3 rounded-lg text-base font-medium
+                    ${currentPage === item.id
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    } transition-colors duration-200`}
+                >
+                  {item.label}
+                </button>
+              ))
             )}
           </div>
 
@@ -373,7 +461,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                 <div className="flex items-center space-x-3 px-2 py-2">
                   <div className="bg-indigo-100 dark:bg-indigo-900/30 rounded-full p-2 relative">
                     <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                    {!user?.isEmailVerified && (
+                    {!user?.isEmailVerified && !isAdmin && (
                       <span className="absolute -top-1 -right-1 bg-yellow-500 rounded-full h-2 w-2 animate-pulse"></span>
                     )}
                   </div>
@@ -387,8 +475,8 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   </div>
                 </div>
                 
-                {/* Email Verification Warning - Mobile */}
-                {!user?.isEmailVerified && (
+                {/* Email Verification Warning - Mobile - Only for non-admin users */}
+                {!user?.isEmailVerified && !isAdmin && (
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
@@ -415,27 +503,47 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   {t('My Profile', 'መገለጫዬ')}
                 </button>
 
-                <button
-                  onClick={() => handleNavigate('orders')}
-                  className="flex items-center w-full px-4 py-3 rounded-lg
-                           text-gray-700 dark:text-gray-200 
-                           hover:bg-gray-50 dark:hover:bg-gray-800
-                           transition-colors duration-200"
-                >
-                  <Package className="h-5 w-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-                  {t('My Orders', 'ትዕዛዞቼ')}
-                </button>
+                {/* Admin Dashboard Link in Mobile Menu */}
+                {isAdmin && (
+                  <button
+                    onClick={() => handleNavigate('admin')}
+                    className="flex items-center w-full px-4 py-3 rounded-lg
+                             text-gray-700 dark:text-gray-200 
+                             hover:bg-gray-50 dark:hover:bg-gray-800
+                             transition-colors duration-200"
+                  >
+                    <BarChart3 className="h-5 w-5 mr-3 text-indigo-600 dark:text-indigo-400" />
+                    {t('Admin Dashboard', 'የአስተዳዳሪ ዳሽቦርድ')}
+                  </button>
+                )}
 
-                <button
-                  onClick={() => handleNavigate('my-messages')}
-                  className="flex items-center w-full px-4 py-3 rounded-lg
-                           text-gray-700 dark:text-gray-200 
-                           hover:bg-gray-50 dark:hover:bg-gray-800
-                           transition-colors duration-200"
-                >
-                  <MessageSquare className="h-5 w-5 mr-3 text-indigo-600 dark:text-indigo-400" />
-                  {t('My Messages', 'መልእክቶቼ')}
-                </button>
+                {/* Orders - Only for non-admin users */}
+                {!isAdmin && (
+                  <button
+                    onClick={() => handleNavigate('orders')}
+                    className="flex items-center w-full px-4 py-3 rounded-lg
+                             text-gray-700 dark:text-gray-200 
+                             hover:bg-gray-50 dark:hover:bg-gray-800
+                             transition-colors duration-200"
+                  >
+                    <Package className="h-5 w-5 mr-3 text-indigo-600 dark:text-indigo-400" />
+                    {t('My Orders', 'ትዕዛዞቼ')}
+                  </button>
+                )}
+
+                {/* Messages - Only for non-admin users */}
+                {!isAdmin && (
+                  <button
+                    onClick={() => handleNavigate('my-messages')}
+                    className="flex items-center w-full px-4 py-3 rounded-lg
+                             text-gray-700 dark:text-gray-200 
+                             hover:bg-gray-50 dark:hover:bg-gray-800
+                             transition-colors duration-200"
+                  >
+                    <MessageSquare className="h-5 w-5 mr-3 text-indigo-600 dark:text-indigo-400" />
+                    {t('My Messages', 'መልእክቶቼ')}
+                  </button>
+                )}
 
                 <button
                   onClick={() => handleNavigate('notifications')}
@@ -482,7 +590,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               </button>
             )}
 
-            {/* Mobile Actions - Theme, Language, Cart */}
+            {/* Mobile Actions - Theme, Language, Cart - Cart only for non-admin users */}
             <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-200 dark:border-gray-800">
               <button
                 onClick={toggleTheme}
@@ -510,23 +618,26 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                 </span>
               </button>
 
-              <button
-                onClick={() => handleNavigate('cart')}
-                className="flex flex-col items-center justify-center p-3 rounded-lg
-                         text-gray-700 dark:text-gray-200 
-                         hover:bg-gray-50 dark:hover:bg-gray-800
-                         transition-colors duration-200 relative"
-              >
-                <ShoppingCart className="h-5 w-5 mb-1" />
-                <span className="text-xs">{t('Cart', 'ጋሪ')}</span>
-                {totalItems > 0 && (
-                  <span className="absolute top-1 right-6 bg-indigo-600 dark:bg-indigo-500 
-                                 text-white text-xs font-bold rounded-full 
-                                 h-5 w-5 flex items-center justify-center">
-                    {totalItems}
-                  </span>
-                )}
-              </button>
+              {/* Cart - Only show for non-admin users */}
+              {!isAdmin && (
+                <button
+                  onClick={() => handleNavigate('cart')}
+                  className="flex flex-col items-center justify-center p-3 rounded-lg
+                           text-gray-700 dark:text-gray-200 
+                           hover:bg-gray-50 dark:hover:bg-gray-800
+                           transition-colors duration-200 relative"
+                >
+                  <ShoppingCart className="h-5 w-5 mb-1" />
+                  <span className="text-xs">{t('Cart', 'ጋሪ')}</span>
+                  {totalItems > 0 && (
+                    <span className="absolute top-1 right-6 bg-indigo-600 dark:bg-indigo-500 
+                                   text-white text-xs font-bold rounded-full 
+                                   h-5 w-5 flex items-center justify-center">
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
