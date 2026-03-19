@@ -15,6 +15,13 @@ export interface Notification {
   updatedAt: string;
 }
 
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  orderUpdates: boolean;
+  promotions: boolean;
+}
+
 export interface NotificationsResponse {
   notifications: Notification[];
   total: number;
@@ -36,7 +43,6 @@ export const notificationService = {
       const response = await api.get('/notifications', { params });
       console.log('📨 Notifications response:', response.data);
       
-      // Ensure we return the expected structure
       return {
         notifications: response.data.notifications || [],
         total: response.data.total || 0,
@@ -117,6 +123,45 @@ export const notificationService = {
       return response.data;
     } catch (error) {
       console.error('❌ Error clearing notifications:', error);
+      throw error;
+    }
+  },
+
+  // Get notification preferences
+  async getPreferences(): Promise<NotificationPreferences> {
+    try {
+      console.log('📡 Fetching notification preferences');
+      const response = await api.get('/notifications/preferences');
+      console.log('📨 Preferences response:', response.data);
+      
+      // Return with defaults if data is missing
+      return {
+        email: response.data.email ?? true,
+        push: response.data.push ?? true,
+        orderUpdates: response.data.orderUpdates ?? true,
+        promotions: response.data.promotions ?? true
+      };
+    } catch (error) {
+      console.error('❌ Error fetching preferences:', error);
+      // Return default preferences on error
+      return {
+        email: true,
+        push: true,
+        orderUpdates: true,
+        promotions: true
+      };
+    }
+  },
+
+  // Update notification preferences
+  async updatePreferences(preferences: NotificationPreferences): Promise<NotificationPreferences> {
+    try {
+      console.log('📡 Updating notification preferences:', preferences);
+      const response = await api.put('/notifications/preferences', preferences);
+      console.log('✅ Preferences updated:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error updating preferences:', error);
       throw error;
     }
   }
