@@ -24,7 +24,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
-import { NotificationBell } from '../components/NotificationBell';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
@@ -132,7 +132,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
             
-            {/* Notification Bell - Show for all users (admins might need notifications too) */}
+            {/* Notification Bell - Show for all users */}
             <NotificationBell onNavigate={handleNavigate} />
             
             {/* Theme Toggle - Show for all users */}
@@ -250,12 +250,12 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                         )}
                       </div>
                       
-                      {/* Menu Items - Conditional based on user role */}
+                      {/* Menu Items - FIXED: Consistent padding and margins */}
                       <div className="py-1">
                         {/* Profile - Show for all users */}
                         <button
                           onClick={() => handleNavigate('profile')}
-                          className="flex items-center w-full px-4 py-2 text-sm
+                          className="flex items-center w-full px-4 py-2.5 text-sm
                                    text-gray-700 dark:text-gray-200 
                                    hover:bg-gray-50 dark:hover:bg-gray-700 
                                    transition-colors"
@@ -268,7 +268,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                         {isAdmin && (
                           <button
                             onClick={() => handleNavigate('admin')}
-                            className="flex items-center w-full px-4 py-2 text-sm
+                            className="flex items-center w-full px-4 py-2.5 text-sm
                                      text-gray-700 dark:text-gray-200 
                                      hover:bg-gray-50 dark:hover:bg-gray-700 
                                      transition-colors"
@@ -282,7 +282,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                         {!isAdmin && (
                           <button
                             onClick={() => handleNavigate('orders')}
-                            className="flex items-center w-full px-4 py-2 text-sm
+                            className="flex items-center w-full px-4 py-2.5 text-sm
                                      text-gray-700 dark:text-gray-200 
                                      hover:bg-gray-50 dark:hover:bg-gray-700 
                                      transition-colors"
@@ -296,7 +296,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                         {!isAdmin && (
                           <button
                             onClick={() => handleNavigate('my-messages')}
-                            className="flex items-center w-full px-4 py-2 text-sm
+                            className="flex items-center w-full px-4 py-2.5 text-sm
                                      text-gray-700 dark:text-gray-200 
                                      hover:bg-gray-50 dark:hover:bg-gray-700 
                                      transition-colors"
@@ -306,22 +306,22 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                           </button>
                         )}
 
-                        {/* Notifications - Show for all users */}
+                        {/* Notifications - FIXED: Consistent spacing */}
                         <button
                           onClick={() => handleNavigate('notifications')}
-                          className="flex items-center w-full px-4 py-2 text-sm
+                          className="flex items-center w-full px-4 py-2.5 text-sm
                                    text-gray-700 dark:text-gray-200 
                                    hover:bg-gray-50 dark:hover:bg-gray-700 
                                    transition-colors"
                         >
                           <Bell className="h-4 w-4 mr-3 text-indigo-600 dark:text-indigo-400" />
-                          <span className="flex-1">{t('Notifications', 'ማሳወቂያዎች')}</span>
+                          <span className="flex-1 text-left">{t('Notifications', 'ማሳወቂያዎች')}</span>
                         </button>
 
                         {/* Notification Settings - Show for all users */}
                         <button
                           onClick={() => handleNavigate('notification-settings')}
-                          className="flex items-center w-full px-4 py-2 text-sm
+                          className="flex items-center w-full px-4 py-2.5 text-sm
                                    text-gray-700 dark:text-gray-200 
                                    hover:bg-gray-50 dark:hover:bg-gray-700 
                                    transition-colors"
@@ -336,7 +336,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                       {/* Sign Out */}
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center w-full px-4 py-2 text-sm
+                        className="flex items-center w-full px-4 py-2.5 text-sm
                                  text-red-600 dark:text-red-400 
                                  hover:bg-red-50 dark:hover:bg-red-900/20 
                                  transition-colors"
