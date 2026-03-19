@@ -1,54 +1,56 @@
 import mongoose from 'mongoose';
 
-const notificationSchema = mongoose.Schema({
+const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+    index: true
   },
   type: {
     type: String,
     enum: ['order', 'promotion', 'system', 'security', 'reminder', 'contact'],
-    default: 'system',
+    default: 'system'
   },
   title: {
     type: String,
-    required: true,
+    required: true
   },
   message: {
     type: String,
-    required: true,
+    required: true
   },
   data: {
     type: mongoose.Schema.Types.Mixed,
-    default: {},
+    default: {}
   },
   isRead: {
     type: Boolean,
     default: false,
+    index: true
   },
   isArchived: {
     type: Boolean,
-    default: false,
+    default: false
   },
   actionLink: {
     type: String,
-    default: null,
+    default: null
   },
   actionText: {
     type: String,
-    default: null,
+    default: null
   },
   image: {
     type: String,
-    default: null,
+    default: null
   },
   expiresAt: {
     type: Date,
-    default: null,
-  },
+    default: null
+  }
 }, {
-  timestamps: true,
+  timestamps: true
 });
 
 // Index for faster queries
