@@ -14,41 +14,86 @@ export const submitContact = async (req, res) => {
       return res.status(400).json({ message: 'Please fill all required fields' });
     }
 
+    console.log('📝 Creating new contact message:', { name, email, subject });
+
     const contact = await Contact.create({
       name,
       email,
       phone: phone || '',
       subject,
       message,
+      isRead: false,
+      isReplied: false
     });
 
-    console.log('✅ New contact message received:', contact._id);
+    console.log('✅ New contact message saved with ID:', contact._id);
 
     // Find all admin users to notify
     const adminUsers = await User.find({ isAdmin: true });
+    console.log(`👥 Found ${adminUsers.length} admin users to notify`);
     
     // Create notification for each admin
-    for (const admin of adminUsers) {
+    if (adminUsers.length > 0) {
+      for (const admin of adminUsers) {
+        try {
+          console.log(`📨 Creating notification for admin: ${admin.email}`);
+          
+          const notification = await createNotification(
+            admin._id,
+            'contact',
+            'New Contact Message',
+            `${name} sent a message: ${subject.substring(0, 50)}${subject.length > 50 ? '...' : ''}`,
+            { 
+              contactId: contact._id, 
+              messageId: contact._id,
+              name, 
+              email, 
+              subject,
+              preview: message.substring(0, 100)
+            },
+            '/admin?tab=contacts',
+            'View Message',
+            null
+          );
+          
+          if (notification) {
+            console.log(`✅ Notification created for admin: ${admin.email} with ID: ${notification._id}`);
+          } else {
+            console.log(`❌ Failed to create notification for admin: ${admin.email}`);
+          }
+        } catch (notifError) {
+          console.error('❌ Error creating notification for admin:', notifError);
+        }
+      }
+    } else {
+      console.log('⚠️ No admin users found to notify');
+    }
+
+    // If user is logged in, create notification for the user too
+    if (req.user) {
       try {
-        await createNotification(
-          admin._id,
+        console.log(`📨 Creating notification for user: ${req.user.email}`);
+        
+        const userNotification = await createNotification(
+          req.user._id,
           'contact',
-          'New Contact Message',
-          `${name} sent a message: ${subject}`,
+          'Message Sent',
+          `Your message "${subject.substring(0, 50)}${subject.length > 50 ? '...' : ''}" has been received. We'll respond soon.`,
           { 
-            contactId: contact._id, 
-            name, 
-            email, 
-            subject,
-            preview: message.substring(0, 100)
+            contactId: contact._id,
+            messageId: contact._id,
+            subject
           },
-          '/admin?tab=contacts',
+          `/my-messages/${contact._id}`,
           'View Message',
           null
         );
-        console.log(`✅ Notification created for admin: ${admin.email}`);
+        
+        if (userNotification) {
+          console.log(`✅ Notification created for user: ${req.user.email}`);
+        }
       } catch (notifError) {
-        console.error('Error creating notification for admin:', notifError);
+        console.error('❌ Error creating notification for user:', notifError);
       }
     }
 
@@ -69,7 +114,7 @@ export const submitContact = async (req, res) => {
 export const getContacts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const isRead = req.query.isRead;
     const isReplied = req.query.isReplied;
     const search = req.query.search;
@@ -95,11 +140,12 @@ export const getContacts = async (req, res) => {
 
     const total = await Contact.countDocuments(query);
     const contacts = await Contact.find(query)
-      .sort('-createdAt')
+      .populate('repliedBy', 'fullName email')
+      .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit);
 
-    console.log(`📬 Found ${contacts.length} contact messages`);
+    console.log(`📬 Found ${contacts.length} contact messages for admin`);
 
     res.json({
       messages: contacts,
@@ -115,39 +161,70 @@ export const getContacts = async (req, res) => {
 
 // @desc    Get single contact message
 // @route   GET /api/contact/:id
-// @access  Private/Admin
+// @access  Private (Admin or message owner)
 export const getContactById = async (req, res) => {
   try {
-    const contact = await Contact.findById(req.params.id);
+    console.log(`🔍 Fetching message with ID: ${req.params.id} for user: ${req.user.email}`);
+    
+    const contact = await Contact.findById(req.params.id)
+      .populate('repliedBy', 'fullName email');
     
     if (!contact) {
+      console.log(`❌ Message not found: ${req.params.id}`);
       return res.status(404).json({ message: 'Message not found' });
     }
 
-    res.json(contact);
+    // Check if user is admin OR the message owner
+    const isAdmin = req.user.isAdmin === true;
+    const isOwner = contact.email === req.user.email;
+    
+    console.log(`🔐 Access check - isAdmin: ${isAdmin}, isOwner: ${isOwner}`);
+    
+    if (isAdmin || isOwner) {
+      console.log(`✅ Access granted to message ${req.params.id}`);
+      return res.json(contact);
+    }
+
+    console.log(`❌ Access denied to message ${req.params.id} for user ${req.user.email}`);
+    return res.status(403).json({ message: 'Not authorized to view this message' });
+    
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching message:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
 // @desc    Mark contact as read
 // @route   PUT /api/contact/:id/read
-// @access  Private/Admin
+// @access  Private (Admin or message owner)
 export const markAsRead = async (req, res) => {
   try {
+    console.log(`📝 Marking message as read: ${req.params.id} for user: ${req.user.email}`);
+    
     const contact = await Contact.findById(req.params.id);
     
     if (!contact) {
       return res.status(404).json({ message: 'Message not found' });
     }
 
-    contact.isRead = true;
-    await contact.save();
+    // Check if user is admin OR the message owner
+    const isAdmin = req.user.isAdmin === true;
+    const isOwner = contact.email === req.user.email;
+    
+    console.log(`🔐 Access check - isAdmin: ${isAdmin}, isOwner: ${isOwner}`);
+    
+    if (isAdmin || isOwner) {
+      contact.isRead = true;
+      await contact.save();
+      console.log(`✅ Message ${req.params.id} marked as read by ${req.user.email}`);
+      return res.json(contact);
+    }
 
-    res.json(contact);
+    console.log(`❌ Access denied to mark message ${req.params.id} as read for user ${req.user.email}`);
+    return res.status(403).json({ message: 'Not authorized to modify this message' });
+    
   } catch (error) {
-    console.error(error);
+    console.error('Error marking as read:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -158,6 +235,10 @@ export const markAsRead = async (req, res) => {
 export const replyToMessage = async (req, res) => {
   try {
     const { reply } = req.body;
+    
+    console.log(`📝 Admin replying to message: ${req.params.id}`);
+    console.log(`👤 Admin: ${req.user.email}`);
+    
     const contact = await Contact.findById(req.params.id);
     
     if (!contact) {
@@ -174,36 +255,50 @@ export const replyToMessage = async (req, res) => {
     contact.repliedBy = req.user._id;
     await contact.save();
 
-    console.log(`✅ Reply sent to ${contact.email}`);
+    console.log(`✅ Reply saved for message ${contact._id}`);
+    console.log(`📧 Customer email: ${contact.email}`);
 
     // Find the customer user by email
     const customer = await User.findOne({ email: contact.email });
     
     if (customer) {
-      // Create notification for the customer - FIXED: Use proper actionLink format with message ID
-      await createNotification(
-        customer._id,
-        'contact',
-        'Reply to Your Message',
-        `Admin replied to your message: "${contact.subject.substring(0, 50)}${contact.subject.length > 50 ? '...' : ''}"`,
-        { 
-          contactId: contact._id, 
-          messageId: contact._id, // Add both for compatibility
-          subject: contact.subject,
-          reply: reply.substring(0, 100)
-        },
-        `/my-messages/${contact._id}`, // Include the message ID in the link
-        'View Reply',
-        null
-      );
-      console.log(`✅ Notification created for customer: ${customer.email} with link: /my-messages/${contact._id}`);
+      console.log(`👤 Customer found: ${customer.email} (ID: ${customer._id})`);
+      
+      // Create notification for the customer
+      try {
+        const notification = await createNotification(
+          customer._id,
+          'contact',
+          'Reply to Your Message',
+          `Admin replied to your message: "${contact.subject.substring(0, 50)}${contact.subject.length > 50 ? '...' : ''}"`,
+          { 
+            contactId: contact._id, 
+            messageId: contact._id,
+            subject: contact.subject,
+            reply: reply.substring(0, 100)
+          },
+          `/my-messages/${contact._id}`,
+          'View Reply',
+          null
+        );
+        
+        if (notification) {
+          console.log(`✅ Notification created for customer: ${customer.email} with ID: ${notification._id}`);
+          console.log(`🔗 Action link: /my-messages/${contact._id}`);
+        } else {
+          console.log(`❌ Failed to create notification for customer: ${customer.email}`);
+        }
+      } catch (notifError) {
+        console.error('❌ Error creating notification for customer:', notifError);
+      }
     } else {
-      console.log(`⚠️ User not found with email: ${contact.email}`);
+      console.log(`⚠️ No user account found with email: ${contact.email}`);
+      console.log('The customer may not have an account or may need to sign up first');
     }
 
     res.json(contact);
   } catch (error) {
-    console.error('Error sending reply:', error);
+    console.error('❌ Error sending reply:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -258,18 +353,41 @@ export const getContactStats = async (req, res) => {
   }
 };
 
-// @desc    Get current user's messages
+// @desc    Get current user's messages (for customers) OR all messages (for admins)
 // @route   GET /api/contact/my-messages
 // @access  Private
 export const getMyMessages = async (req, res) => {
   try {
-    const messages = await Contact.find({ email: req.user.email })
-      .sort('-createdAt');
+    console.log('🔍 Getting messages for user:', req.user.email);
+    console.log('👤 User is admin:', req.user.isAdmin);
     
-    console.log(`📬 Found ${messages.length} messages for user: ${req.user.email}`);
-    res.json({ messages });
+    let messages;
+    
+    if (req.user.isAdmin) {
+      // Admins can see all messages
+      console.log('👑 Admin user - fetching ALL messages');
+      messages = await Contact.find({})
+        .populate('repliedBy', 'fullName email')
+        .sort({ createdAt: -1 });
+    } else {
+      // Regular users only see their own messages
+      console.log('👤 Regular user - fetching messages for:', req.user.email);
+      messages = await Contact.find({ email: req.user.email })
+        .populate('repliedBy', 'fullName email')
+        .sort({ createdAt: -1 });
+    }
+    
+    console.log(`📬 Found ${messages.length} messages total`);
+    
+    res.json({ 
+      success: true,
+      messages 
+    });
   } catch (error) {
-    console.error('Error fetching user messages:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error fetching user messages:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
   }
 };
