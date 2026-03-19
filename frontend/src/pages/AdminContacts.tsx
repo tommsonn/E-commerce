@@ -60,27 +60,25 @@ export function AdminContacts({ onNavigate }: AdminContactsProps) {
     fetchStats();
   }, [currentPage, filterStatus, searchQuery]);
 
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const data = await contactService.getContactMessages({
-        page: currentPage,
-        limit: 10,
-        isRead: filterStatus === 'unread' ? false : undefined,
-        isReplied: filterStatus === 'replied' ? true : undefined,
-        search: searchQuery || undefined
-      });
-      setMessages(data.messages || []);
-      setTotalPages(data.pages || 1);
-      setTotal(data.total || 0);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      setMessages([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+const fetchMessages = async () => {
+  try {
+    setLoading(true);
+    const data = await contactService.getContactMessages({
+      page: currentPage,
+      limit: 10,
+      isRead: filterStatus === 'unread' ? false : undefined,
+      isReplied: filterStatus === 'replied' ? true : undefined,
+      search: searchQuery || undefined
+    });
+    setMessages(data.messages);
+    setTotalPages(data.pages);
+    setTotal(data.total);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchStats = async () => {
     try {
