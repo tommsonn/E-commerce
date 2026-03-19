@@ -34,7 +34,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  CreditCard // Add this import for payments icon
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -47,7 +47,7 @@ import { AdminProducts } from './AdminProducts';
 import { AdminCategories } from './AdminCategories';
 import { AdminCustomers } from './AdminCustomers';
 import { AdminContacts } from './AdminContacts';
-import { AdminPayments } from './AdminPayments'; // Import the payments component
+import { AdminPayments } from './AdminPayments';
 
 interface Order {
   _id: string;
@@ -129,6 +129,30 @@ export function Admin({ onNavigate }: AdminProps) {
   const [contactTotal, setContactTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   
+  // Get URL parameters on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab') as TabType;
+    const messageId = params.get('id');
+    
+    if (tab) {
+      setActiveTab(tab);
+      
+      // If there's a message ID and tab is contacts, we could highlight that message
+      if (tab === 'contacts' && messageId) {
+        console.log('Should highlight contact message:', messageId);
+        // You can add logic here to scroll to and highlight the specific message
+        setTimeout(() => {
+          const element = document.getElementById(`message-${messageId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+          }
+        }, 500);
+      }
+    }
+  }, []);
+
   const { isAdmin, user } = useAuth();
   const { t, language } = useLanguage();
   const { theme } = useTheme();
@@ -271,6 +295,21 @@ export function Admin({ onNavigate }: AdminProps) {
     }
   };
 
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    
+    // Update URL with tab parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    
+    // Remove id parameter when switching tabs
+    if (tab !== 'contacts') {
+      url.searchParams.delete('id');
+    }
+    
+    window.history.pushState({}, '', url.toString());
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
@@ -390,7 +429,7 @@ export function Admin({ onNavigate }: AdminProps) {
         <div className="mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           <div className="flex space-x-8 min-w-max">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => handleTabChange('dashboard')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2
                 ${activeTab === 'dashboard'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -402,7 +441,7 @@ export function Admin({ onNavigate }: AdminProps) {
             </button>
             
             <button
-              onClick={() => setActiveTab('products')}
+              onClick={() => handleTabChange('products')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2
                 ${activeTab === 'products'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -414,7 +453,7 @@ export function Admin({ onNavigate }: AdminProps) {
             </button>
             
             <button
-              onClick={() => setActiveTab('orders')}
+              onClick={() => handleTabChange('orders')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2
                 ${activeTab === 'orders'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -426,7 +465,7 @@ export function Admin({ onNavigate }: AdminProps) {
             </button>
             
             <button
-              onClick={() => setActiveTab('categories')}
+              onClick={() => handleTabChange('categories')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2
                 ${activeTab === 'categories'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -438,7 +477,7 @@ export function Admin({ onNavigate }: AdminProps) {
             </button>
             
             <button
-              onClick={() => setActiveTab('customers')}
+              onClick={() => handleTabChange('customers')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2
                 ${activeTab === 'customers'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -450,7 +489,7 @@ export function Admin({ onNavigate }: AdminProps) {
             </button>
 
             <button
-              onClick={() => setActiveTab('contacts')}
+              onClick={() => handleTabChange('contacts')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 relative
                 ${activeTab === 'contacts'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -466,9 +505,8 @@ export function Admin({ onNavigate }: AdminProps) {
               )}
             </button>
 
-            {/* New Payments Tab */}
             <button
-              onClick={() => setActiveTab('payments')}
+              onClick={() => handleTabChange('payments')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 relative
                 ${activeTab === 'payments'
                   ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
@@ -590,7 +628,7 @@ export function Admin({ onNavigate }: AdminProps) {
                   {t('Recent Orders', 'የቅርብ ጊዜ ትዕዛዞች')}
                 </h2>
                 <button
-                  onClick={() => setActiveTab('orders')}
+                  onClick={() => handleTabChange('orders')}
                   className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 
                            dark:hover:text-indigo-300 font-medium"
                 >
@@ -657,7 +695,7 @@ export function Admin({ onNavigate }: AdminProps) {
                   <button
                     onClick={() => {
                       setEditingProduct(null);
-                      setActiveTab('products');
+                      handleTabChange('products');
                       setTimeout(() => setShowProductForm(true), 100);
                     }}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 
@@ -673,7 +711,7 @@ export function Admin({ onNavigate }: AdminProps) {
                   </button>
                   
                   <button
-                    onClick={() => setActiveTab('orders')}
+                    onClick={() => handleTabChange('orders')}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 
                              dark:hover:bg-gray-600 transition-colors text-left group"
                   >
@@ -687,7 +725,7 @@ export function Admin({ onNavigate }: AdminProps) {
                   </button>
                   
                   <button
-                    onClick={() => setActiveTab('categories')}
+                    onClick={() => handleTabChange('categories')}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 
                              dark:hover:bg-gray-600 transition-colors text-left group"
                   >
@@ -701,7 +739,7 @@ export function Admin({ onNavigate }: AdminProps) {
                   </button>
                   
                   <button
-                    onClick={() => setActiveTab('contacts')}
+                    onClick={() => handleTabChange('contacts')}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 
                              dark:hover:bg-gray-600 transition-colors text-left group relative"
                   >
@@ -758,7 +796,7 @@ export function Admin({ onNavigate }: AdminProps) {
                 </div>
                 
                 <button
-                  onClick={() => setActiveTab('products')}
+                  onClick={() => handleTabChange('products')}
                   className="mt-4 w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 
                            hover:bg-gray-100 dark:hover:bg-gray-600 
                            text-gray-700 dark:text-gray-300 rounded-xl 
@@ -956,7 +994,6 @@ export function Admin({ onNavigate }: AdminProps) {
           <AdminContacts onNavigate={onNavigate} />
         )}
 
-        {/* New Payments Tab Content */}
         {activeTab === 'payments' && (
           <AdminPayments onNavigate={onNavigate} />
         )}
