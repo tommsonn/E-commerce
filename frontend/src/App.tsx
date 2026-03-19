@@ -69,10 +69,12 @@ function AppContent() {
       const orderId = urlParams.get('orderId');
       const status = urlParams.get('status');
       const paymentStatus = urlParams.get('payment');
+      const tab = urlParams.get('tab');
+      const messageId = urlParams.get('id');
       const path = window.location.pathname;
       
       console.log('Current path:', path);
-      console.log('URL params:', { token, orderId, status, paymentStatus });
+      console.log('URL params:', { token, orderId, status, paymentStatus, tab, messageId });
       
       // Check for email verification
       if (path.includes('/verify-email') && token) {
@@ -93,12 +95,21 @@ function AppContent() {
 
       // Check for message ID in path
       if (path.startsWith('/my-messages/')) {
-        const messageId = path.split('/')[2];
-        if (messageId) {
-          console.log('Found message ID in URL:', messageId);
-          setSelectedMessageId(messageId);
+        const messageIdFromPath = path.split('/')[2];
+        if (messageIdFromPath) {
+          console.log('Found message ID in URL path:', messageIdFromPath);
+          setSelectedMessageId(messageIdFromPath);
           setCurrentPage('my-messages');
         }
+      } else if (path === '/my-messages') {
+        setCurrentPage('my-messages');
+        setSelectedMessageId(undefined);
+      }
+
+      // Check for admin route with tab
+      if (path === '/admin' && tab) {
+        setCurrentPage('admin');
+        // The Admin component will handle the tab parameter
       }
 
       // Check for admin payment ID in path
@@ -152,6 +163,24 @@ function AppContent() {
 
   const handleNavigate = (page: string, data?: any) => {
     console.log('Navigating to:', page, data);
+    
+    // Check if page includes query parameters
+    if (page.includes('?')) {
+      const [basePage, queryString] = page.split('?');
+      const params = new URLSearchParams(queryString);
+      
+      // Handle admin with tab parameter
+      if (basePage === 'admin') {
+        setCurrentPage('admin');
+        
+        // Update URL with query parameters
+        const url = new URL(window.location.href);
+        url.pathname = '/admin';
+        url.search = queryString;
+        window.history.pushState({}, '', url.toString());
+        return;
+      }
+    }
     
     // Handle nested routes for messages
     if (page.startsWith('my-messages/')) {
@@ -231,6 +260,18 @@ function AppContent() {
         url.pathname = '/payment/callback';
         if (data?.status) {
           url.searchParams.set('payment', data.status);
+        }
+      } else if (page === 'my-messages') {
+        url.pathname = '/my-messages';
+        url.search = '';
+      } else if (page === 'admin') {
+        url.pathname = '/admin';
+        // Keep existing query params if any
+        if (data?.tab) {
+          url.searchParams.set('tab', data.tab);
+        }
+        if (data?.id) {
+          url.searchParams.set('id', data.id);
         }
       } else if (page === 'admin-payments') {
         url.pathname = '/admin/payments';
