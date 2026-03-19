@@ -13,17 +13,21 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public route
+// Public route - anyone can submit contact form
 router.post('/', submitContact);
 
-// Customer route (protected)
+// Customer route (protected) - Get user's own messages
 router.get('/my-messages', protect, getMyMessages);
 
-// Admin routes
+// Protected route for viewing a single message (accessible to owner or admin)
+router.get('/:id', protect, getContactById);
+
+// Protected route for marking as read (accessible to owner or admin)
+router.put('/:id/read', protect, markAsRead);
+
+// Admin only routes
 router.get('/stats', protect, admin, getContactStats);
 router.get('/', protect, admin, getContacts);
-router.get('/:id', protect, admin, getContactById);
-router.put('/:id/read', protect, admin, markAsRead);
 router.post('/:id/reply', protect, admin, replyToMessage);
 router.delete('/:id', protect, admin, deleteContact);
 
