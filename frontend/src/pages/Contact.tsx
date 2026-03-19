@@ -129,96 +129,53 @@ export function Contact({ onNavigate }: ContactProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 transition-colors duration-500">
       
-      {/* Hero Section - Enhanced Professional Design */}
-<section className="relative bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950/30 py-20 sm:py-24 overflow-hidden">
-  {/* Decorative Elements */}
-  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-200/20 dark:bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-  <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200/20 dark:bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-  
-  {/* Subtle pattern overlay */}
-  <div className="absolute inset-0 opacity-[0.02]">
-    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-900 dark:text-white"/>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
-    </svg>
-  </div>
-  
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-      {/* Left Content */}
-      <div className="space-y-6">
-        {/* Badge with animation */}
-        <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-medium border border-indigo-200 dark:border-indigo-800 animate-pulse">
-          <span className="relative flex h-2 w-2 mr-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-          </span>
-          <MessageSquare className="h-4 w-4 mr-2" />
-          {t('Customer Support', 'የደንበኛ ድጋፍ')}
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 text-white py-24 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
         </div>
         
-        {/* Main Heading with Gradient */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
-          {t('We\'d Love to', 'ከእርስዎ')}{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
-            {t('Hear From You', 'መስማት እንፈልጋለን')}
-          </span>
-        </h1>
-        
-        {/* Description with improved typography */}
-        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">
-          {t(
-            'Have questions about our products, need assistance with an order, or just want to share feedback? Our dedicated support team is here to help you 24/7.',
-            'ስለ ምርቶቻችን ጥያቄዎች አሉዎት፣ በትዕዛዝ ላይ እገዛ ይፈልጋሉ፣ ወይም አስተያየት ማጋራት ይፈልጋሉ? የእኛ ቁርጠኛ የድጋፍ ቡድን 24/7 እርስዎን ለመርዳት ዝግጁ ነው።'
-          )}
-        </p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-indigo-100 text-sm font-medium mb-8 border border-white/20">
+              <MessageSquare className="h-4 w-4 mr-2 text-indigo-300" />
+              {t('Get in Touch', 'ያግኙን')}
+            </div>
+            
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-blue-200">
+                {t('We\'d Love to Hear From You', 'ከእርስዎ መስማት እንፈልጋለን')}
+              </span>
+            </h1>
+            
+            <p className="text-xl text-indigo-100 mb-10 leading-relaxed max-w-2xl">
+              {t(
+                'Have questions? We\'re here to help. Reach out to us anytime.',
+                'ጥያቄዎች አሉዎት? እኛ ለመርዳት እዚህ ነን። በማንኛውም ጊዜ ያግኙን።'
+              )}
+            </p>
 
-        {/* Quick Stats */}
-        <div className="flex flex-wrap gap-8 pt-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
-              <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">24/7</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('Support Available', 'ድጋፍ ይገኛል')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">30min</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('Avg Response', 'አማካይ ምላሽ')}</p>
-            </div>
+            {/* Quick Links for Logged-in Users */}
+            {user && (
+              <div className="flex flex-wrap gap-4 mt-6">
+                <button
+                  onClick={() => onNavigate('my-messages')}
+                  className="inline-flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 
+                           backdrop-blur-sm rounded-xl transition-all transform hover:scale-105
+                           border border-white/20 text-white"
+                >
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  {t('View My Messages', 'መልእክቶቼን ተመልከት')}
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Quick Links for Logged-in Users */}
-        {user && (
-          <div className="flex flex-wrap gap-4 pt-4">
-            <button
-              onClick={() => onNavigate('my-messages')}
-              className="group inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 
-                       text-white rounded-xl transition-all duration-300 
-                       transform hover:scale-105 hover:shadow-xl relative overflow-hidden"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-              <MessageSquare className="h-5 w-5 mr-2" />
-              {t('View My Messages', 'መልእክቶቼን ተመልከት')}
-              <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-</section>
+        
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-50 via-slate-50/50 to-transparent dark:from-slate-950 dark:via-slate-950/50"></div>
+      </section>
 
       {/* Contact Info Cards */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
@@ -421,10 +378,14 @@ export function Contact({ onNavigate }: ContactProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-semibold text-lg
-                         transition-all duration-300 transform hover:scale-105 hover:shadow-xl
-                         disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none 
-                         flex items-center justify-center space-x-3 relative overflow-hidden
+                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 
+                         hover:from-indigo-700 hover:to-indigo-800
+                         text-white py-4 rounded-xl font-semibold text-lg
+                         transition-all duration-500 transform hover:scale-105 
+                         disabled:from-gray-400 disabled:to-gray-400 
+                         disabled:cursor-not-allowed disabled:transform-none 
+                         flex items-center justify-center space-x-3
+                         shadow-lg hover:shadow-xl relative overflow-hidden
                          group"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
