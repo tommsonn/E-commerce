@@ -11,7 +11,8 @@ import {
   Mail,
   Phone,
   CheckCircle,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -27,6 +28,11 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [replySuccess, setReplySuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { t, language } = useLanguage();
   const { theme } = useTheme();
@@ -34,38 +40,78 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
 
   useEffect(() => {
     if (user) {
-      console.log('👤 Current user:', user);
+      console.log('👤 Current user:', {
+        id: user._id,
+        email: user.email,
+        fullName: user.fullName,
+        isAdmin: user.isAdmin
+      });
       fetchMyMessages();
     }
   }, [user]);
 
   // Auto-select message if messageId is provided
   useEffect(() => {
-    if (messageId && messages.length > 0) {
+    if (messageId) {
       console.log('🔍 Looking for message with ID:', messageId);
-      const message = messages.find(m => m._id === messageId);
-      if (message) {
-        console.log('✅ Found message:', message.subject);
-        setSelectedMessage(message);
-        // Mark as read when opened from notification
-        if (!message.isRead) {
-          markMessageAsRead(messageId);
+      
+      // First check if we already have it in the messages array
+      if (messages.length > 0) {
+        const message = messages.find(m => m._id === messageId);
+        if (message) {
+          console.log('✅ Found message in list:', message.subject);
+          setSelectedMessage(message);
+          if (!message.isRead) {
+            markMessageAsRead(messageId);
+          }
+          return;
         }
-      } else {
-        console.log('❌ Message not found with ID:', messageId);
       }
+      
+      // If not found in list, fetch it directly
+      fetchSpecificMessage(messageId);
     }
   }, [messageId, messages]);
+
+  const fetchSpecificMessage = async (id: string) => {
+    try {
+      console.log('📡 Fetching specific message:', id);
+      const message = await contactService.getMessageById(id);
+      if (message) {
+        console.log('✅ Found specific message:', message.subject);
+        setSelectedMessage(message);
+        if (!message.isRead && !user?.isAdmin) {
+          markMessageAsRead(id);
+        }
+      } else {
+        console.log('❌ Message not found with ID:', id);
+        setError(t('Message not found', 'መልእክት አልተገኘም'));
+      }
+    } catch (error: any) {
+      console.error('Error fetching specific message:', error);
+      setError(error.message || 'Failed to load message');
+    }
+  };
 
   const fetchMyMessages = async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log('📡 Fetching messages for user:', user?.email);
+      
       const response = await contactService.getMyMessages();
       console.log('📨 Messages response:', response);
-      setMessages(response.messages || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
+      
+      if (response.messages && response.messages.length > 0) {
+        console.log(`✅ Found ${response.messages.length} messages`);
+        setMessages(response.messages);
+      } else {
+        console.log('⚠️ No messages found for this user');
+        setMessages([]);
+      }
+    } catch (error: any) {
+      console.error('❌ Error fetching messages:', error);
+      setError(error.message || 'Failed to load messages');
     } finally {
       setLoading(false);
     }
@@ -81,6 +127,46 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
       );
     } catch (error) {
       console.error('Error marking message as read:', error);
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedMessage || !replyText.trim()) return;
+    
+    try {
+      setSendingReply(true);
+      setReplyError(null);
+      
+      const updatedMessage = await contactService.replyToMessage(selectedMessage._id, replyText);
+      
+      // Update local state
+      setMessages(prev => 
+        prev.map(msg => 
+          msg._id === selectedMessage._id 
+            ? { ...msg, reply: replyText, isReplied: true, repliedAt: new Date().toISOString() } 
+            : msg
+        )
+      );
+      
+      setSelectedMessage(prev => 
+        prev ? { 
+          ...prev, 
+          reply: replyText, 
+          isReplied: true, 
+          repliedAt: new Date().toISOString() 
+        } : null
+      );
+      
+      setReplyText('');
+      setReplySuccess(true);
+      
+      setTimeout(() => setReplySuccess(false), 3000);
+      
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      setReplyError(t('Failed to send reply', 'መልስ መላክ አልተሳካም'));
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -118,16 +204,30 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
 
   const handleMessageClick = (message: ContactMessage) => {
     setSelectedMessage(message);
-    if (!message.isRead) {
+    if (!message.isRead && !user?.isAdmin) {
       markMessageAsRead(message._id);
     }
+    
+    // Update URL to include message ID
+    const url = new URL(window.location.href);
+    url.pathname = `/my-messages/${message._id}`;
+    window.history.pushState({}, '', url.toString());
+  };
+
+  const handleCloseMessage = () => {
+    setSelectedMessage(null);
+    setReplyText('');
+    setReplyError(null);
+    
+    // Update URL back to messages list
+    const url = new URL(window.location.href);
+    url.pathname = '/my-messages';
+    window.history.pushState({}, '', url.toString());
   };
 
   const handleSendNewMessage = () => {
     console.log('Navigating to contact page');
-    // Close the modal first
-    setSelectedMessage(null);
-    // Then navigate to contact page
+    handleCloseMessage();
     onNavigate('contact');
   };
 
@@ -172,6 +272,30 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 
+                    dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 
+                        rounded-2xl p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                fetchMyMessages();
+              }}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
+            >
+              {t('Try Again', 'እንደገና ሞክር')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 
                   dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 py-8">
@@ -180,7 +304,7 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
         {/* Header */}
         <div className="flex items-center mb-8">
           <button
-            onClick={() => onNavigate('profile')}
+            onClick={() => onNavigate(user?.isAdmin ? 'admin' : 'profile')}
             className="group flex items-center text-gray-600 dark:text-gray-400 
                      hover:text-indigo-600 dark:hover:text-indigo-400 
                      transition-colors px-4 py-2 rounded-lg mr-4"
@@ -190,7 +314,7 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
           </button>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
             <MessageSquare className="h-8 w-8 mr-3 text-indigo-600 dark:text-indigo-400" />
-            {t('My Messages', 'መልእክቶቼ')}
+            {user?.isAdmin ? t('All Messages', 'ሁሉም መልእክቶች') : t('My Messages', 'መልእክቶቼ')}
           </h1>
           {messageId && (
             <span className="ml-4 px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 
@@ -208,15 +332,19 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
               {t('No messages yet', 'ገና ምንም መልእክት የለም')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {t('Send us a message from the contact page', 'ከመገኛ ገጽ መልእክት ይላኩልን')}
+              {user?.isAdmin 
+                ? t('No customer messages to display', 'ምንም የደንበኛ መልእክት የለም')
+                : t('Send us a message from the contact page', 'ከመገኛ ገጽ መልእክት ይላኩልን')}
             </p>
-            <button
-              onClick={() => onNavigate('contact')}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white 
-                       rounded-xl transition-all transform hover:scale-105"
-            >
-              {t('Go to Contact', 'ወደ መገኛ ገጽ ይሂዱ')}
-            </button>
+            {!user?.isAdmin && (
+              <button
+                onClick={() => onNavigate('contact')}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white 
+                         rounded-xl transition-all transform hover:scale-105"
+              >
+                {t('Go to Contact', 'ወደ መገኛ ገጽ ይሂዱ')}
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -230,14 +358,20 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                            hover:shadow-xl transition-all duration-300 
                            overflow-hidden border border-gray-100 dark:border-gray-700 
                            cursor-pointer transform hover:-translate-y-1
-                           ${!message.isRead ? 'border-l-4 border-l-indigo-500' : ''}
+                           ${!message.isRead && !user?.isAdmin ? 'border-l-4 border-l-indigo-500' : ''}
                            ${message._id === messageId ? 'ring-2 ring-indigo-500 shadow-lg bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}
                   onClick={() => handleMessageClick(message)}
                 >
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
+                        <div className="flex items-center space-x-3 mb-2 flex-wrap gap-2">
+                          {user?.isAdmin && (
+                            <div className="flex items-center text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                              <User className="h-3 w-3 mr-1" />
+                              <span className="font-medium">{message.name}</span>
+                            </div>
+                          )}
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {message.subject}
                           </h3>
@@ -263,10 +397,24 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                         <Calendar className="h-4 w-4 mr-1" />
                         {formatDate(message.createdAt)}
                       </div>
+                      {user?.isAdmin && (
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-1" />
+                          <a href={`mailto:${message.email}`} className="hover:text-indigo-600">
+                            {message.email}
+                          </a>
+                        </div>
+                      )}
+                      {message.isReplied && (
+                        <div className="flex items-center text-green-600 dark:text-green-400">
+                          <Reply className="h-4 w-4 mr-1" />
+                          {t('Replied', 'መልስ ተልኳል')}
+                        </div>
+                      )}
                     </div>
 
                     {/* Reply Preview */}
-                    {message.reply && (
+                    {message.reply && !user?.isAdmin && (
                       <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
                         <div className="flex items-center mb-1">
                           <Reply className="h-3 w-3 text-indigo-600 dark:text-indigo-400 mr-1" />
@@ -274,7 +422,7 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                             {t('Admin Reply', 'የአስተዳዳሪ መልስ')}:
                           </span>
                         </div>
-                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200 line-clamp-2">
                           {message.reply}
                         </p>
                       </div>
@@ -299,7 +447,7 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                   {t('Message Details', 'የመልእክት ዝርዝሮች')}
                 </h2>
                 <button
-                  onClick={() => setSelectedMessage(null)}
+                  onClick={handleCloseMessage}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400 
                            dark:hover:text-gray-200"
                 >
@@ -308,6 +456,7 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
               </div>
               
               <div className="p-6 space-y-6">
+                {/* Message Info */}
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
                   <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
                     {selectedMessage.subject}
@@ -317,10 +466,45 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                   </p>
                 </div>
 
+                {/* Sender Info - Show full details for admins */}
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-3">
+                      <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {selectedMessage.name}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Mail className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {selectedMessage.email}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedMessage.phone && (
+                      <div className="flex items-center space-x-3">
+                        <Phone className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        <div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {selectedMessage.phone}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Customer Message */}
                 <div>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('Your Message', 'መልእክትዎ')}
+                    {t('Message', 'መልእክት')}
                   </p>
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
                     <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
@@ -329,13 +513,13 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                   </div>
                 </div>
 
-                {/* Admin Reply */}
+                {/* Admin Reply - Show existing reply */}
                 {selectedMessage.reply && (
                   <div>
                     <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 
                                 mb-2 flex items-center">
                       <Reply className="h-4 w-4 mr-1" />
-                      {t('Admin Reply', 'የአስተዳዳሪ መልስ')}
+                      {user?.isAdmin ? t('Your Reply', 'የእርስዎ መልስ') : t('Admin Reply', 'የአስተዳዳሪ መልስ')}
                       {selectedMessage.repliedAt && (
                         <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
                           {formatDate(selectedMessage.repliedAt)}
@@ -350,11 +534,75 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                   </div>
                 )}
 
-                {/* Send New Message Button - For customers to reply to admin */}
-                {selectedMessage.isReplied && (
+                {/* Reply Form - Only for admins */}
+                {user?.isAdmin && (
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('Want to reply?', 'መልስ መስጠት ይፈልጋሉ?')}
+                      {selectedMessage.isReplied 
+                        ? t('Send Additional Reply', 'ተጨማሪ መልስ ይላኩ')
+                        : t('Send Reply', 'መልስ ይላኩ')}
+                    </p>
+                    
+                    {/* Success Message */}
+                    {replySuccess && (
+                      <div className="mb-4 p-3 bg-green-100 dark:bg-green-900/30 
+                                    text-green-700 dark:text-green-300 rounded-xl
+                                    flex items-center">
+                        <CheckCircle className="h-5 w-5 mr-2" />
+                        {t('Reply sent successfully!', 'መልስ በተሳካ ሁኔታ ተልኳል!')}
+                      </div>
+                    )}
+                    
+                    {/* Error Message */}
+                    {replyError && (
+                      <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 
+                                    text-red-700 dark:text-red-300 rounded-xl">
+                        {replyError}
+                      </div>
+                    )}
+                    
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder={t('Type your reply here...', 'መልስዎን እዚህ ይጻፉ...')}
+                      rows={4}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 
+                               border border-gray-300 dark:border-gray-600 
+                               rounded-xl focus:ring-2 focus:ring-indigo-500 
+                               focus:border-transparent dark:text-white"
+                    />
+                    
+                    <div className="flex justify-end mt-3">
+                      <button
+                        onClick={handleSendReply}
+                        disabled={!replyText.trim() || sendingReply}
+                        className="flex items-center space-x-2 px-6 py-2 
+                                 bg-indigo-600 hover:bg-indigo-700 
+                                 text-white rounded-xl transition-all 
+                                 transform hover:scale-105 disabled:opacity-50 
+                                 disabled:cursor-not-allowed"
+                      >
+                        {sendingReply ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                            <span>{t('Sending...', 'በመላክ ላይ...')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            <span>{t('Send Reply', 'መልስ ይላኩ')}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Send New Message Button - For customers */}
+                {!user?.isAdmin && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('Want to send another message?', 'ሌላ መልእክት መላክ ይፈልጋሉ?')}
                     </p>
                     <button
                       onClick={handleSendNewMessage}
@@ -366,17 +614,13 @@ export function MyMessages({ onNavigate, messageId }: MyMessagesProps) {
                       <MessageSquare className="h-5 w-5" />
                       <span className="font-medium">{t('Send New Message', 'አዲስ መልእክት ይላኩ')}</span>
                     </button>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-                      {t('This will open the contact form to send a new message to admin', 
-                         'ይህ ለአስተዳዳሪ አዲስ መልእክት ለመላክ የመገኛ ቅጽ ይከፍታል')}
-                    </p>
                   </div>
                 )}
 
                 {/* Close Button */}
                 <div className="flex justify-end pt-4">
                   <button
-                    onClick={() => setSelectedMessage(null)}
+                    onClick={handleCloseMessage}
                     className="px-6 py-2 bg-gray-500 hover:bg-gray-600 
                              text-white rounded-xl transition-all 
                              transform hover:scale-105"
