@@ -65,6 +65,7 @@ export function NotificationSettings({ onNavigate }: NotificationSettingsProps) 
     try {
       setLoading(true);
       const data = await notificationService.getPreferences();
+      console.log('📨 Fetched preferences:', data);
       setPreferences(data);
     } catch (error) {
       console.error('Error fetching preferences:', error);
@@ -86,8 +87,6 @@ export function NotificationSettings({ onNavigate }: NotificationSettingsProps) 
       setSaveSuccess(false);
       await notificationService.updatePreferences(preferences);
       setSaveSuccess(true);
-      
-      // Optional: Show success message (will auto-hide after 3 seconds)
     } catch (error: any) {
       console.error('Error saving preferences:', error);
       alert(error.response?.data?.message || t('Failed to save preferences', 'ምርጫዎችን ማስቀመጥ አልተሳካም'));
