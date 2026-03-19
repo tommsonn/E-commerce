@@ -13,7 +13,11 @@ export interface ContactMessage extends ContactData {
   isRead: boolean;
   isReplied: boolean;
   repliedAt?: string;
-  repliedBy?: string;
+  repliedBy?: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
   reply?: string;
   createdAt: string;
   updatedAt: string;
@@ -34,8 +38,15 @@ export interface ContactResponse {
 export const contactService = {
   // Submit contact form (public)
   async submitContact(data: ContactData): Promise<ContactResponse> {
-    const response = await api.post('/contact', data);
-    return response.data;
+    try {
+      console.log('📝 Submitting contact form:', data);
+      const response = await api.post('/contact', data);
+      console.log('✅ Contact submitted:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error submitting contact:', error);
+      throw error;
+    }
   },
 
   // Get all contact messages (admin)
@@ -47,7 +58,9 @@ export const contactService = {
     search?: string;
   }): Promise<{ messages: ContactMessage[]; total: number; pages: number }> {
     try {
+      console.log('📡 Fetching contact messages with params:', params);
       const response = await api.get('/contact', { params });
+      console.log('✅ Contact messages fetched:', response.data);
       return {
         messages: response.data.messages || [],
         total: response.data.total || 0,
@@ -70,39 +83,92 @@ export const contactService = {
     }
   },
 
-  // Get single contact message (admin)
-  async getContactMessage(id: string): Promise<ContactMessage> {
-    const response = await api.get(`/contact/${id}`);
-    return response.data;
+  // Get single contact message by ID
+  async getMessageById(id: string): Promise<ContactMessage> {
+    try {
+      console.log('📡 Fetching message by ID:', id);
+      const response = await api.get(`/contact/${id}`);
+      console.log('✅ Message fetched:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error fetching message by ID:', {
+        id,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
+      throw error;
+    }
   },
 
-  // Mark as read (admin)
+  // Mark as read
   async markAsRead(id: string): Promise<ContactMessage> {
-    const response = await api.put(`/contact/${id}/read`);
-    return response.data;
+    try {
+      console.log('📡 Marking message as read:', id);
+      const response = await api.put(`/contact/${id}/read`);
+      console.log('✅ Message marked as read');
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error marking as read:', {
+        id,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
+      throw error;
+    }
   },
 
   // Reply to message (admin)
   async replyToMessage(id: string, reply: string): Promise<ContactMessage> {
-    const response = await api.post(`/contact/${id}/reply`, { reply });
-    return response.data;
+    try {
+      console.log('📡 Replying to message:', id);
+      console.log('💬 Reply content:', reply);
+      const response = await api.post(`/contact/${id}/reply`, { reply });
+      console.log('✅ Reply sent:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error replying to message:', {
+        id,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
+      throw error;
+    }
   },
 
   // Delete message (admin)
   async deleteMessage(id: string): Promise<{ message: string }> {
-    const response = await api.delete(`/contact/${id}`);
-    return response.data;
+    try {
+      console.log('📡 Deleting message:', id);
+      const response = await api.delete(`/contact/${id}`);
+      console.log('✅ Message deleted:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error deleting message:', {
+        id,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
+      throw error;
+    }
   },
-// Get current user's messages (for customers)
-async getMyMessages(): Promise<{ messages: ContactMessage[] }> {
-  try {
-    const response = await api.get('/contact/my-messages');
-    return { messages: response.data.messages || [] };
-  } catch (error) {
-    console.error('Error fetching my messages:', error);
-    return { messages: [] };
-  }
-},
+
+  // Get current user's messages (for customers) OR all messages (for admins)
+  async getMyMessages(): Promise<{ messages: ContactMessage[] }> {
+    try {
+      console.log('📡 Calling API: /contact/my-messages');
+      const response = await api.get('/contact/my-messages');
+      console.log('📨 API Response:', response.data);
+      console.log('📨 Messages count:', response.data.messages?.length);
+      return { messages: response.data.messages || [] };
+    } catch (error: any) {
+      console.error('❌ Error fetching my messages:', {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
+      return { messages: [] };
+    }
+  },
+
   // Format date helper
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleString('en-US', {
